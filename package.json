@@ -1,0 +1,20 @@
+{
+  "name": "back-masterq",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JamesMB209/back-masterQ.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JamesMB209/back-masterQ/issues"
+  },
+  "homepage": "https://github.com/JamesMB209/back-masterQ#readme"
+}
