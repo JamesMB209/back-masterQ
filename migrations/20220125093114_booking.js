@@ -1,7 +1,7 @@
 exports.up = function (knex) {
   return knex.schema.createTable("booking", (table) => {
     table.increments().unique();
-    table.integer("business_id");
+    table.integer("business_id").nullable()
     table.foreign("business_id").references("business_users.id");
     table.integer("doctor_id");
     table.foreign("doctor_id").references("doctors.id");

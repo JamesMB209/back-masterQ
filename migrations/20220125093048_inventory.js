@@ -12,5 +12,5 @@ exports.up = function (knex) {
 };
 
 exports.down = function (knex) {
-  return knex.schame.dropTable("inventory");
+  return knex.schema.dropTable("inventory");
 };
