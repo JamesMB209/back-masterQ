@@ -1,18 +1,29 @@
+const knexFile = require('../knexfile');
+const knex = require('knex')(knexFile[process.env.ENVIROMENT]);
+const Doctor = require('./doctorService');
+const Pharmacy = require('./pharmacyService');
+
 class Business {
-    constructor(PharmacyClass) {
-        // this.Pharmacy = PharmacyClass;
-        this.id;
+    constructor(business) {
+        this.id = business.id
         this.pharmacy;
+        this.init();
     }
 
-    init (database) {
-        // request the id from the table
-        this.id = '3';
-        // and load the doctors from the table // init the doctor class inside here.
-        database.forEach(doctor => this[doctor.id] = doctor);
+    async init() {
+        try {
+            let doctors = await knex("doctors")
+                .select("*")
+                .where("business_id", this.id);
 
-        this.pharmacy = new Pharmacy("pharmacy");
-    } 
+                doctors.forEach(doctor => this[doctor.id] = new Doctor(doctor));
+
+            this.pharmacy = new Pharmacy();
+        } catch (err) {
+            console.log('failed to init doctors and/or pharmacy.')
+            console.error(err);
+        }
+    }
 }
 
 module.exports = Business;

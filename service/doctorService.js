@@ -1,13 +1,13 @@
-// const knexFile = require('../knexfile').development;
-// const knex = require('knex')(knexFile);
-
 class Doctor {
 	constructor(doctor) {
 		this.id = doctor.id;
+		this.businessID = doctor.business_id; // might not be required: reminder.
 		this.fName = doctor.f_name;
 		this.lName = doctor.l_name;
-		this.room = doctor.room;
 		this.hkid = doctor.hkid;
+		this.phone = doctor.phone;
+		this.email = doctor.email;
+		this.room = doctor.room;
 		
 		this.fullName = `${doctor.f_name} ${doctor.l_name}`;
 		this.queue = [];
