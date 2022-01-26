@@ -5,6 +5,7 @@ exports.up = function (knex) {
     table.string("l_name");
     table.string("hkid").unique();
     table.string("email").unique();
+    table.string("password");
     table.string("gender");
     table.string("dob");
     table.string("phone");
@@ -13,4 +14,6 @@ exports.up = function (knex) {
   });
 };
 
-exports.down = function (knex) {};
+exports.down = function (knex) {
+  return knex.schema.dropTable("patients");
+};
