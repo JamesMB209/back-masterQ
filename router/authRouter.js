@@ -33,7 +33,8 @@ class PatientAuthRouter {
 
       if (await bcrypt.compare(password, user.password)) {
         let payload = {
-          id: user.id
+          id: user.id,
+          table: table //changed.
         }
 
         let token = this.jwt.sign(payload, this.config.jwtSecret)

@@ -14,7 +14,7 @@ module.exports = (knex) => {
       console.log(payload, 'payload')
       let user = await knex
         .select('*')
-        .from('patients')
+        .from(payload.table) //changed.
         .where({
           id: payload.id
         })
