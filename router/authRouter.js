@@ -1,14 +1,15 @@
 const bcrypt = require('bcrypt')
 
 class PatientAuthRouter {
-  constructor (express, axios, jwt, knex, config) {
+  constructor(express, axios, jwt, knex, config, server) {
     this.express = express
     this.axios = axios
     this.jwt = jwt
     this.knex = knex
     this.config = config
+    this.server = server
   }
-  router () {
+  router() {
     let router = this.express.Router()
 
     router.post('/api/login', this.postLogin.bind(this))
@@ -17,7 +18,7 @@ class PatientAuthRouter {
     return router
   }
 
-  async postLogin (req, res) {
+  async postLogin(req, res) {
     console.log('login attempt')
     console.log(req.body)
     if (req.body.email && req.body.password && req.body.type) {
@@ -31,21 +32,37 @@ class PatientAuthRouter {
         .where({ email: email })
         .then(data => data[0])
 
+      let doctors = await this.knex('doctors')
+        .select('business_id', 'id', 'f_name', 'l_name')
+
+      let business = await this.knex('business_users')
+        .select('id', 'name')
+
+
       if (await bcrypt.compare(password, user.password)) {
         let payload = {
           id: user.id,
-          table: table //changed.
+          table: table
         }
 
+        let config = user;
+        delete config.password;
+
+        let businessConfig = {
+          doctors: doctors,
+          business: business
+        };
+
         let token = this.jwt.sign(payload, this.config.jwtSecret)
-        res.json({ token })
+        console.log({ token, config, businessConfig })
+        res.json({ token, config, businessConfig })
       }
     } else {
       res.sendStatus(401)
     }
   }
 
-  async postSignup (req, res) {
+  async postSignup(req, res) {
     // we have no logic to handle if the email is taken.
     console.log('Sign up')
     console.log(req.body)
@@ -82,55 +99,55 @@ class PatientAuthRouter {
     }
   }
 
-//   async postFacebook (req, res) {
-//     // add in condition to check for user
-//     if (req.body.info) {
-//       var accessToken = req.body.info.accessToken
-//       this.axios
-//         .get(`https://graph.facebook.com/me?access_token=${accessToken}`)
-//         .then(async data => {
-//           if (!data.data.error) {
-//             let oldUser = await this.knex('users')
-//               .select('id')
-//               .where('facebookid', req.body.info.id)
-//             if (oldUser.length >= 1) {
-//               console.log('user is there')
-//               console.log(oldUser)
-//               let payload = {
-//                 id: oldUser[0].id
-//               }
-//               var token = this.jwt.sign(payload, this.config.jwtSecret)
-//               res.json({
-//                 token: token
-//               })
-//             } else {
-//               let FBUSER = {
-//                 name: req.body.info.name, // better to use data or profile to check the facebook user name
-//                 email: req.body.info.email, // better to use data or profile to check the email
-//                 password: 'Get them to insert pw',
-//                 facebookaccesstoken: req.body.info.accessToken,
-//                 facebookid: req.body.info.id
-//               }
-//               let userId = await this.knex('users').insert(FBUSER)
-//               let user = await this.knex('users')
-//                 .select('id')
-//                 .where('facebookid', req.body.info.id)
-//               console.log(user, 'from authRouter')
-//               let payload = {
-//                 id: user[0]
-//               }
-//               console.log(payload)
-//               var token = this.jwt.sign(payload, this.config.jwtSecret)
-//               res.json({
-//                 token: token
-//               })
-//             }
-//           } else {
-//             res.sendStatus(401)
-//           }
-//         })
-//     }
-//   }
+  //   async postFacebook (req, res) {
+  //     // add in condition to check for user
+  //     if (req.body.info) {
+  //       var accessToken = req.body.info.accessToken
+  //       this.axios
+  //         .get(`https://graph.facebook.com/me?access_token=${accessToken}`)
+  //         .then(async data => {
+  //           if (!data.data.error) {
+  //             let oldUser = await this.knex('users')
+  //               .select('id')
+  //               .where('facebookid', req.body.info.id)
+  //             if (oldUser.length >= 1) {
+  //               console.log('user is there')
+  //               console.log(oldUser)
+  //               let payload = {
+  //                 id: oldUser[0].id
+  //               }
+  //               var token = this.jwt.sign(payload, this.config.jwtSecret)
+  //               res.json({
+  //                 token: token
+  //               })
+  //             } else {
+  //               let FBUSER = {
+  //                 name: req.body.info.name, // better to use data or profile to check the facebook user name
+  //                 email: req.body.info.email, // better to use data or profile to check the email
+  //                 password: 'Get them to insert pw',
+  //                 facebookaccesstoken: req.body.info.accessToken,
+  //                 facebookid: req.body.info.id
+  //               }
+  //               let userId = await this.knex('users').insert(FBUSER)
+  //               let user = await this.knex('users')
+  //                 .select('id')
+  //                 .where('facebookid', req.body.info.id)
+  //               console.log(user, 'from authRouter')
+  //               let payload = {
+  //                 id: user[0]
+  //               }
+  //               console.log(payload)
+  //               var token = this.jwt.sign(payload, this.config.jwtSecret)
+  //               res.json({
+  //                 token: token
+  //               })
+  //             }
+  //           } else {
+  //             res.sendStatus(401)
+  //           }
+  //         })
+  //     }
+  //   }
 }
 
 module.exports = PatientAuthRouter
