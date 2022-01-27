@@ -11,8 +11,8 @@ class PatientAuthRouter {
   router () {
     let router = this.express.Router()
 
-    router.post('/api/patient/login', this.postLogin.bind(this))
-    router.post('/api/patient/signup', this.postSignup.bind(this))
+    router.post('/api/login', this.postLogin.bind(this))
+    router.post('/api/signup', this.postSignup.bind(this))
     // router.post('/api/login/facebook', this.postFacebook.bind(this))
     return router
   }
@@ -20,13 +20,14 @@ class PatientAuthRouter {
   async postLogin (req, res) {
     console.log('login attempt')
     console.log(req.body)
-    if (req.body.email && req.body.password) {
-      let email = req.body.email
-      let password = req.body.password
+    if (req.body.email && req.body.password && req.body.type) {
+      let email = req.body.email;
+      let password = req.body.password;
+      let table = req.body.type;
 
       let user = await this.knex
         .select('*')
-        .from('patients')
+        .from(table)
         .where({ email: email })
         .then(data => data[0])
 
