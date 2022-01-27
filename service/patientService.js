@@ -1,3 +1,6 @@
+const knexFile = require('../knexfile');
+const knex = require('knex')(knexFile[process.env.ENVIROMENT]);
+
 const History = require("./historyService");
 
 class Patient extends History {
@@ -24,8 +27,8 @@ class Patient extends History {
 
 	async init() {
 		try {
-			[this.id] = await this.addPatient(this);
-			this.history = await this.diaganosisHistory(this.id);
+			// [this.id] = await this.addPatient(this);
+			// this.history = await this.diaganosisHistory(this.id);
 		} catch (err) {
 			console.log(err);
 		}

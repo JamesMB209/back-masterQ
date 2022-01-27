@@ -12,12 +12,12 @@ const config = require('./config')
 
 const patientAuthRouter = new PatientAuthRouter(express, axios, jwt, knex, config)
 
-// const Doctor = require("./service/doctorService");
-// const Patient = require("./service/patientService");
-// const History = require("./service/historyService");
-// const Business = require("./service/businessService");
-// const QueObject = require("./service/serverService");
-// const Pharmacy = require("./service/pharmacyService");
+const Doctor = require("./service/doctorService");
+const Patient = require("./service/patientService");
+const History = require("./service/historyService");
+const Business = require("./service/businessService");
+const Queue = require("./service/queueService");
+const Pharmacy = require("./service/pharmacyService");
 
 /** App configuration */
 const app = express();
@@ -38,7 +38,7 @@ app.use('/', patientAuthRouter.router())
 // })
 
 /** create server */
-// const server = new QueObject();
+const server = new Queue();
 
 // io.on("connection", (socket) => {
 // console.log("New client connected");
@@ -103,7 +103,31 @@ app.use('/', patientAuthRouter.router())
 
 
 
+    setTimeout(() => {
+        axios
+            .get("https://randomuser.me/api/?results=3")
+            .then((response) => {
+                for (i of response.data.results) {
+                    // let docID = Math.floor(Math.random() * doctors.length);
+                    let hkid = `${i.location.postcode}`.split(' ').join('');
 
+                    let businessID =3;
+                    let doctorID =4;
+
+                    server[businessID][doctorID].addToQueue(new Patient({
+                        fName: i.name.first,
+                        lName: i.name.last,
+                        temperature: Math.floor(Math.random() * 3) + 36,
+                        hkid: hkid,
+                        dob: i.dob.date,
+                        gender: i.gender,
+                        doctor: doctorID,
+                    }));
+
+                    // console.log(`${i.name.first} ${i.name.last}:http://localhost:8000/queue/${docID + 1}/${hkid}`)
+
+                }
+            })}, 0);
 
 
 
@@ -114,16 +138,16 @@ app.use('/', patientAuthRouter.router())
 //     console.log(server);
 //     // console.log(server[businessID][doctorID])
 
-
 //     server.reload({id: 9})
 // }, 1000)
 
-// setTimeout(() => {
-//     let businessID = 9;
-//     let doctorID = 4;
-//     console.log(server);
+setTimeout(() => {
+    let businessID = 3;
+    let doctorID = 4;
+    console.log(server);
+    console.log(server[businessID][doctorID]);
 
-// }, 3000)
+}, 3000)
 
 /** App init */
 http.listen(process.env.PORT);

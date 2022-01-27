@@ -7,29 +7,29 @@ class History {
 		 * Adds a new patient to the "patient" database if none already exists 
 		*/
 
-		return knex('patient')
-		.select("id")
-		.where('id_card', patient.hkid)
-		.then((row) => {
-			if(row.length === 1) {
-				return [row[0].id];
-			} else {
-				return knex('patient')
-				.insert({
-					f_name: patient.fName,
-					l_name: patient.lName,
-					id_card: patient.hkid,
-					dob: patient.dob,
-					gender: patient.gender,
-				})
-				.returning("id")
-				.catch((err) => {
-					console.error(err);
-				})
-			}
-		}).catch((err) => {
-			console.error(err);
-		})
+		// return knex('patient')
+		// .select("id")
+		// .where('id_card', patient.hkid)
+		// .then((row) => {
+		// 	if(row.length === 1) {
+		// 		return [row[0].id];
+		// 	} else {
+			// 	return knex('patient')
+			// 	.insert({
+			// 		f_name: patient.fName,
+			// 		l_name: patient.lName,
+			// 		id_card: patient.hkid,
+			// 		dob: patient.dob,
+			// 		gender: patient.gender,
+			// 	})
+			// 	.returning("id")
+			// 	.catch((err) => {
+			// 		console.error(err);
+			// 	})
+			// }
+		// }).catch((err) => {
+		// 	console.error(err);
+		// })
 	}
 
 	saveBooking(patient, completed=true, checkedIn=true) {

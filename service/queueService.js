@@ -2,7 +2,7 @@ const knexFile = require('../knexfile');
 const knex = require('knex')(knexFile[process.env.ENVIROMENT]);
 const Business = require('./businessService');
 
-class Server {
+class Queue {
     constructor() {
         this.init();
     }
@@ -34,4 +34,4 @@ class Server {
     }
 }
 
-module.exports = Server;
+module.exports = Queue;
