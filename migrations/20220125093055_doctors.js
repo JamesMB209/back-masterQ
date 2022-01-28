@@ -11,7 +11,9 @@ exports.up = function (knex) {
     table.string("gender");
     table.string("dob");
     table.string("room");
-    table.timestamps(false, false);
+    table.boolean("active").defaultTo(true)
+    table.boolean("employed").defaultTo(true)
+    table.timestamps(true, false);
   });
 };
 

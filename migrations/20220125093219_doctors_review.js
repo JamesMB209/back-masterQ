@@ -4,7 +4,7 @@ exports.up = function (knex) {
     table.integer("appointment_id");
     table.foreign("appointment_id").references("appointment_history.id");
     table.string("review");
-    table.timestamps(false, false);
+    table.timestamps(true, false);
   });
 };
 

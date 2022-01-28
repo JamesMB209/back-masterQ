@@ -6,10 +6,8 @@ const knexFile = require('./knexfile.js');
 const jwt = require('jsonwebtoken');
 const knex = require('knex')(knexFile[process.env.ENVIROMENT]);
 const authClass = require("./auth")();
-const PatientAuthRouter = require('./router/authRouter.js')
 const axios = require('axios')
 const config = require('./config')
-
 
 const Doctor = require("./service/doctorService");
 const Patient = require("./service/patientService");
@@ -18,6 +16,10 @@ const History = require("./service/historyService");
 const Business = require("./service/businessService");
 const Queue = require("./service/queueService");
 const Pharmacy = require("./service/pharmacyService");
+const AuthRouter = require('./router/authRouter.js')
+const authRouter = new AuthRouter(express, axios, jwt, knex, config)
+const ApiRouter = require("./router/apiRouter");
+const apiRouter = new ApiRouter(express, jwt, knex, authClass);
 
 /** App configuration */
 const app = express();
@@ -33,8 +35,8 @@ const io = require("socket.io")(http);
 const server = new Queue();
 
 /** Router */
-const patientAuthRouter = new PatientAuthRouter(express, axios, jwt, knex, config, server)
-app.use('/', patientAuthRouter.router())
+app.use('/', authRouter.router())
+app.use("/api", apiRouter.router())
 
 // io.on("connection", (socket) => {
 // console.log("New client connected");

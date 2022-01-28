@@ -14,7 +14,9 @@ class Business {
         try {
             let doctors = await knex("doctors")
                 .select("*")
-                .where("business_id", this.id);
+                .where("business_id", this.id)
+                .andWhere("employed", true)
+                .andWhere("active", true);
 
                 doctors.forEach(doctor => this[doctor.id] = new Doctor(doctor));
 

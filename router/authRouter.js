@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 
-class PatientAuthRouter {
+class AuthRouter {
   constructor(express, axios, jwt, knex, config, server) {
     this.express = express
     this.axios = axios
@@ -150,4 +150,4 @@ class PatientAuthRouter {
   //   }
 }
 
-module.exports = PatientAuthRouter
+module.exports = AuthRouter
