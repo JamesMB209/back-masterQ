@@ -19,7 +19,7 @@ class Doctor {
 		 * Returns a promise of the patient object from the id if exists.
 		 */
 		return new Promise((res, rej) => {
-			if (this.queue.findIndex(patient => patient.id == id) === -1) { rej() };
+			if (this.queue.findIndex(patient => patient.id == id) === -1) { rej("patient not found.") };
 			let patient = this.queue.find(patient => patient.id == id);
 			
 			patient.queuePosition = this.queue.findIndex(patient => patient.id == id);

@@ -1,14 +1,14 @@
 class ApiRouter {
-    constructor(express, jwt, knex, authClass) {
+    constructor(express, jwt, knex, auth) {
         this.express = express
         this.jwt = jwt
         this.knex = knex
-        this.authClass = authClass
+        this.auth = auth
     }
 
     router() {
         let router = this.express.Router()
-        router.get('/config', this.config.bind(this))
+        router.get('/config', this.auth.authenticate() ,this.config.bind(this))
         return router
     }
     async config(req, res) {

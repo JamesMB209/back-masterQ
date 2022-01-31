@@ -3,8 +3,8 @@ const cors = require("cors");
 const express = require("express");
 const bodyParser = require("body-parser");
 const knexFile = require('./knexfile.js');
-const jwt = require('jsonwebtoken');
 const knex = require('knex')(knexFile[process.env.ENVIROMENT]);
+const jwt = require('jsonwebtoken');
 const authClass = require("./auth")();
 const axios = require('axios')
 const config = require('./config')
@@ -38,61 +38,136 @@ const server = new Queue();
 app.use('/', authRouter.router())
 app.use("/api", apiRouter.router())
 
-// io.on("connection", (socket) => {
-// console.log("New client connected");
-//     socket.on("start", (data) => {
-//         console.log(data);
-//         let doctor = doctors[data - 1];
 
-//         socket.join(doctor.room);
-//         console.log(`A user has connected to room ${doctor.fullName}`);
-//     });
-// socket.on("disconnect", () => {
-//     console.log("Client disconnected");
-//     clearInterval(interval);
-//   });
-// });
 
-// let interval;
+/** Socket Logic - to abstract later - you know or maybe not */
+io.use(function (socket, next) {
+    if (socket.handshake.query && socket.handshake.query.token) {
+        jwt.verify(socket.handshake.query.token, config.jwtSecret, function (err, decoded) {
+            if (err) return next(new Error('Authentication error'));
+            socket.decoded = decoded;
+            next();
+        });
+    }
+    else {
+        next(new Error('Authentication error')); // could crash the server..?
+    }
+}).on("connection", (socket) => {
+    console.log("1 CONNECTION")
+    const patientID = socket.decoded.id
+    
+    //handlers
+    function updatePatient (businessID, doctorID) {
+        doctor = server[businessID][doctorID];
+            doctor.patient(patientID).then((patient) => {
+                io.to(doctor.id).emit("updatePatient", patient.queuePosition)
+            }).catch((err) => {
+                io.to(doctor.id).emit("updatePatient", err)
+            })
+    }
 
-// io.on("connection", (socket) => {
-//   console.log("New client connected");
-//   if (interval) {
-//     clearInterval(interval);
-//   }
-//   interval = setInterval(() => getApiAndEmit(socket), 1000);
-//   socket.on("disconnect", () => {
-//     console.log("Client disconnected");
-//     clearInterval(interval);
-//   });
-// });
+    socket.on("JOIN_ROOM", (data) => {
+        console.log(`2 JOIN_ROOM ${server[data.business][data.doctor].id}`);
+        socket.join(server[data.business][data.doctor].id);
+        updatePatient (data.business, data.doctor)
+    });
 
-// const getApiAndEmit = socket => {
-//   const response = new Date();
-//   // Emitting a new message. Will be consumed by the client
-//   socket.emit("FromAPI", response);
-// };
-// async function searchysearchy() {
-//     try {
-//         let business = await knex('business_users')
-//             .select('id', 'name')
-//         let doctors = await knex('doctors')
-//         .select('business_id','id','f_name','l_name')
+    socket.on("next", (data) => {
+        let doctor = server[data.business][data.doctor];
+        console.log(`3 NEXT`);
+        // console.log(doctor.queue);
+        //logic for what happens on a doctor pressing "next".
+        //update the appointment history.
+        // history.saveDiagnosis(doctor.id, doctor.queue[0], data.diagnosis);
+        // history.saveBooking(doctor.queue[0], true);
+        //advance the doctors queue.
+        doctor.next();
 
-//     } catch (err) {
-//         console.error(err)
-//     }
-// }
-// searchysearchy();
+        // io.to(doctor.id).emit("updateDoctor");
+        updatePatient (data.business, data.doctor)
+        // socket.emit("updateMain");
+    });
+
+    socket.on("newPatient", async (data) => {
+        console.log(`3 NEW PATIENT`);
+        updatePatient (data.business, data.doctor)
+        
+        // const doctor = server[data.business][data.doctor];
+        // doctor.patient(patientID).then((patient) => {
+        //     io.to(doctor.id).emit("updatePatient", patient.queuePosition)
+        // }).catch((err) => {
+        //     io.to(doctor.id).emit("updatePatient", err)
+        // })
+
+        // io.to(doctor.id).emit("updateDoctor");
+        // socket.emit("updateMain");
+    });
+
+    socket.on("updatePatient", (data) => {
+        let doctor = doctors[data - 1];
+
+        io.to(doctor.id).emit("updatePatient");
+    });
+
+    socket.on("updateDoctor", (data) => {
+        let doctor = doctors[data - 1];
+        io.to(doctor.id).emit("updateDoctor");
+        io.emit("refreshThat")
+    });
+
+    socket.on("moveUp", (data) => {
+        let doctor = doctors[data.doctor - 1];
+
+        doctor.move(`${data.hkid}`);
+        io.to(doctor.id).emit("updatePatient");
+        io.emit("updateMain");
+    });
+
+    socket.on("removeQ", (data => {
+        let doctor = doctors[data.doctor - 1];
+
+        //update the appointment history database.
+        doctor.patient(data.hkid)
+            .then((patient) => {
+                history.saveBooking(patient, false);
+            })
+            .catch(err => console.log(err));
+
+        //remove from the doctors queue.
+        doctor.remove(data.hkid);
+
+        io.to(doctor.id).emit("updatePatient")
+        socket.emit("updateMain")
+        io.emit("updateDoctor");
+    }))
+
+    socket.on("refreshThat", () => {
+        io.emit("updateMain");
+    });
+
+    socket.on("disconnect", () => {
+        console.log("DISCONNECT")
+    })
+});
+
+
+
+
+
+
+
+
 
 /** status info */
 setTimeout(() => {
     //Testing code inside here
-    let businessID = 3;
-    let doctorID = 4;
+    let businessID = 7;
+    let doctorID = 10;
     let patientID = 1;
-
-    // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+    server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+    server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+    patientID = 2;
+    server[businessID][doctorID].addToQueue(new NewPatient(patientID));
 
     //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
 }, 1000)
@@ -111,7 +186,6 @@ setTimeout(() => {
 
 /** App init */
 http.listen(process.env.PORT);
-// app.listen(process.env.PORT);
 console.log(`Backend running on port: ${process.env.PORT} using the ${process.env.ENVIROMENT} enviroment`);
 
 
