@@ -73,41 +73,41 @@ io.use(function (socket, next) {
     });
 
     socket.on("next", (data) => {
+        let business = server[data.business];
         let doctor = server[data.business][data.doctor];
         console.log(`3 NEXT`);
         // console.log(doctor.queue);
         //logic for what happens on a doctor pressing "next".
+
         //update the appointment history.
         // history.saveDiagnosis(doctor.id, doctor.queue[0], data.diagnosis);
         // history.saveBooking(doctor.queue[0], true);
         //advance the doctors queue.
-        doctor.next();
+        business.pharmacy.addToQueue(doctor.next());
 
-        // io.to(doctor.id).emit("updateDoctor");
         updatePatient (data.business, data.doctor)
-        // socket.emit("updateMain");
     });
 
-    socket.on("newPatient", async (data) => {
-        console.log(`3 NEW PATIENT`);
-        updatePatient (data.business, data.doctor)
+    // socket.on("newPatient", async (data) => {
+    //     console.log(`3 NEW PATIENT`);
+    //     updatePatient (data.business, data.doctor)
         
-        // const doctor = server[data.business][data.doctor];
-        // doctor.patient(patientID).then((patient) => {
-        //     io.to(doctor.id).emit("updatePatient", patient.queuePosition)
-        // }).catch((err) => {
-        //     io.to(doctor.id).emit("updatePatient", err)
-        // })
+    //     // const doctor = server[data.business][data.doctor];
+    //     // doctor.patient(patientID).then((patient) => {
+    //     //     io.to(doctor.id).emit("updatePatient", patient.queuePosition)
+    //     // }).catch((err) => {
+    //     //     io.to(doctor.id).emit("updatePatient", err)
+    //     // })
 
-        // io.to(doctor.id).emit("updateDoctor");
-        // socket.emit("updateMain");
-    });
+    //     // io.to(doctor.id).emit("updateDoctor");
+    //     // socket.emit("updateMain");
+    // });
 
-    socket.on("updatePatient", (data) => {
-        let doctor = doctors[data - 1];
+    // socket.on("updatePatient", (data) => {
+    //     let doctor = doctors[data - 1];
 
-        io.to(doctor.id).emit("updatePatient");
-    });
+    //     io.to(doctor.id).emit("updatePatient");
+    // });
 
     socket.on("updateDoctor", (data) => {
         let doctor = doctors[data - 1];

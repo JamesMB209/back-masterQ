@@ -1,29 +1,30 @@
 class Pharmacy {
     constructor() {
+		this.queue = [];
     }
 
     stock () {
         console.log("drugs n shit");
     }
 
-    patient(hkid) {
+    patient(id) {
 		/**
-		 * Returns a promise of the patient object from the HKID if exists.
+		 * Returns a promise of the patient object from the id if exists.
 		 */
 		return new Promise((res, rej) => {
-			if (this.queue.findIndex(patient => patient.hkid == hkid) === -1) { rej() };
-			let patient = this.queue.find(patient => patient.hkid == hkid);
+			if (this.queue.findIndex(patient => patient.id == id) === -1) { rej("patient not found.") };
+			let patient = this.queue.find(patient => patient.id == id);
 			
-			patient.queuePosition = this.queue.findIndex(patient => patient.hkid == hkid);
+			patient.queuePosition = this.queue.findIndex(patient => patient.id == id);
 			res(patient);
 		})
 	}
 
-	patientIndex(hkid) {
+	patientIndex(id) {
 		/**
 		 * Returns the index of the patient.
 		 */
-		return this.queue.findIndex(patient => patient.hkid == hkid);
+		return this.queue.findIndex(patient => patient.id == id);
 	}
 	
 	addToQueue(patient) {
@@ -37,7 +38,7 @@ class Pharmacy {
 		/**
 		 * Advances the doctors queue by one, by removing the patient in position 0.
 		 */
-		this.queue.shift()
+		this.queue.shift();
 	}
 
 	length() {
@@ -47,23 +48,23 @@ class Pharmacy {
 		return this.queue.length;
 	}
 
-	move(hkid, position=1) {
+	move(id, position=1) {
 		/**
-		 * Move the patient referenced by the HKID to the specified position. Default 1 (first inline).
+		 * Move the patient referenced by the id to the specified position. Default 1 (first inline).
 		 */
-		this.patient(hkid).then(patient => {
-			if (this.patientIndex(hkid) > 1) {
-				this.queue.splice(this.patientIndex(hkid), 1);
+		this.patient(id).then(patient => {
+			if (this.patientIndex(id) > 1) {
+				this.queue.splice(this.patientIndex(id), 1);
 				this.queue.splice(position, 0, patient);
 			}
 		})
     }
 
-	remove(hkid) {
+	remove(id) {
 		/**
-		 * removes the patient with the specified HKID.
+		 * removes the patient with the specified id.
 		 */
-		this.queue.splice(this.patientIndex(hkid), 1);
+		this.queue.splice(this.patientIndex(id), 1);
 	}
 }
 
