@@ -53,30 +53,32 @@ io.use(function (socket, next) {
         next(new Error('Authentication error')); // could crash the server..?
     }
 }).on("connection", (socket) => {
-    console.log("1 CONNECTION")
-    const patientID = socket.decoded.id
-    
-    //handlers
-    function updatePatient (businessID, doctorID) {
-        doctor = server[businessID][doctorID];
-            doctor.patient(patientID).then((patient) => {
-                io.to(doctor.id).emit("updatePatient", patient.queuePosition)
-            }).catch((err) => {
-                io.to(doctor.id).emit("updatePatient", err)
-            })
-    }
+    socket.on("JOIN_ROOM", (data) => { //working
+        //setup what is required.
+        let doctor = server[data.business][data.doctor];
 
-    socket.on("JOIN_ROOM", (data) => {
-        console.log(`2 JOIN_ROOM ${server[data.business][data.doctor].id}`);
-        socket.join(server[data.business][data.doctor].id);
-        updatePatient (data.business, data.doctor)
+        //do stuff
+        socket.join(doctor.id);
+        io.to(doctor.id).emit("UPDATE_PATIENT")
     });
 
-    socket.on("next", (data) => {
+    socket.on("GET_QUEUE_POSTITION", (data) => { //working
+        //setup what is required.
+        let doctor = server[data.business][data.doctor];
+        let patientID = socket.decoded.id
+
+        //do stuff
+        doctor.patient(patientID).then((patient) => {
+            io.to(doctor.id).emit(socket.handshake.query.token, patient.queuePosition)
+        }).catch((err) => {
+            io.to(doctor.id).emit(socket.handshake.query.token, err)
+        })
+    });
+
+    socket.on("NEXT", (data) => {  //working but have not completed history
         let business = server[data.business];
         let doctor = server[data.business][data.doctor];
-        console.log(`3 NEXT`);
-        // console.log(doctor.queue);
+
         //logic for what happens on a doctor pressing "next".
 
         //update the appointment history.
@@ -85,13 +87,14 @@ io.use(function (socket, next) {
         //advance the doctors queue.
         business.pharmacy.addToQueue(doctor.next());
 
-        updatePatient (data.business, data.doctor)
+        // updatePatient(data.business, data.doctor)
+        io.to(doctor.id).emit("UPDATE_PATIENT")
     });
 
     // socket.on("newPatient", async (data) => {
     //     console.log(`3 NEW PATIENT`);
     //     updatePatient (data.business, data.doctor)
-        
+
     //     // const doctor = server[data.business][data.doctor];
     //     // doctor.patient(patientID).then((patient) => {
     //     //     io.to(doctor.id).emit("updatePatient", patient.queuePosition)
@@ -101,12 +104,6 @@ io.use(function (socket, next) {
 
     //     // io.to(doctor.id).emit("updateDoctor");
     //     // socket.emit("updateMain");
-    // });
-
-    // socket.on("updatePatient", (data) => {
-    //     let doctor = doctors[data - 1];
-
-    //     io.to(doctor.id).emit("updatePatient");
     // });
 
     socket.on("updateDoctor", (data) => {
@@ -167,6 +164,8 @@ setTimeout(() => {
     server[businessID][doctorID].addToQueue(new NewPatient(patientID));
     server[businessID][doctorID].addToQueue(new NewPatient(patientID));
     patientID = 2;
+    server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+    patientID = 3;
     server[businessID][doctorID].addToQueue(new NewPatient(patientID));
 
     //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
