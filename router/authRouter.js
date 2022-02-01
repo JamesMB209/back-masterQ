@@ -31,11 +31,11 @@ class AuthRouter {
         .where({ email: email })
         .then(data => data[0])
 
-      // let doctors = await this.knex('doctors')
-      //   .select('business_id', 'id', 'f_name', 'l_name')
+      let doctors = await this.knex('doctors')
+        .select('business_id', 'id', 'f_name', 'l_name')
 
-      // let business = await this.knex('business_users')
-      //   .select('id', 'name')
+      let business = await this.knex('business_users')
+        .select('id', 'name')
 
       if (await bcrypt.compare(password, user.password)) {
         let payload = {
@@ -43,18 +43,18 @@ class AuthRouter {
           table: table
         }
 
-        // let config = user;
-        // delete config.password;
+        let config = user;
+        delete config.password;
 
-        // let businessConfig = {
-        //   doctors: doctors,
-        //   business: business
-        // };
+        let businessConfig = {
+          doctors: doctors,
+          business: business
+        };
 
         let token = this.jwt.sign(payload, this.config.jwtSecret)
         // console.log({ token, config, businessConfig })
-        // res.json({ token, config, businessConfig })
-        res.json({ token})
+        res.json({ token, config, businessConfig })
+        // res.json({ token})
       }
     } else {
       res.sendStatus(401)

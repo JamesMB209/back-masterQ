@@ -161,8 +161,8 @@ io.use(function (socket, next) {
 /** status info */
 setTimeout(() => {
     //Testing code inside here
-    let businessID = 7;
-    let doctorID = 10;
+    let businessID = 1;
+    let doctorID = 2;
     let patientID = 1;
     server[businessID][doctorID].addToQueue(new NewPatient(patientID));
     server[businessID][doctorID].addToQueue(new NewPatient(patientID));
