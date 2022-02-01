@@ -19,7 +19,7 @@ class NewPatient {
                     id: this.id
                 })
 
-            delete user.password;
+            // delete user.password;
             Object.assign(this, user);
 
             let history = await knex

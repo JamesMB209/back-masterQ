@@ -10,7 +10,6 @@ const axios = require('axios')
 const config = require('./config')
 
 const Doctor = require("./service/doctorService");
-const Patient = require("./service/patientService");
 const NewPatient = require("./service/newPatientService");
 const History = require("./service/historyService");
 const Business = require("./service/businessService");
@@ -81,7 +80,7 @@ io.use(function (socket, next) {
         let doctor = server[data.business][data.doctor];
 
         //logic for what happens on a doctor pressing "next".
-
+        // console.log("LINE 84 DOCTORS QUEUE", doctor.queue)
         //update the appointment history.
         // history.saveDiagnosis(doctor.id, doctor.queue[0], data.diagnosis);
         // history.saveBooking(doctor.queue[0], true);
@@ -107,11 +106,15 @@ io.use(function (socket, next) {
     //     // io.to(doctor.id).emit("updateDoctor");
     //     // socket.emit("updateMain");
     // });
-
-    socket.on("updateDoctor", (data) => {
-        let doctor = doctors[data - 1];
-        io.to(doctor.id).emit("updateDoctor");
-        io.emit("refreshThat")
+    ///////////////// THIS PART IS FOR BUSINESSES ONLY!(MAYBE) --
+    
+    socket.on("UPDATE_DOCTOR", (data) => {
+        let business = server[data.business];
+        let doctor = server[data.business][data.doctor];
+        // let doctor = doctors[data - 1];
+        // io.to(doctor.id).emit("updateDoctor");
+        // io.emit("refreshThat")
+        socket.emit(socket.handshake.query.token, doctor);
     });
 
     socket.on("moveUp", (data) => {
@@ -160,8 +163,8 @@ io.use(function (socket, next) {
 /** status info */
 setTimeout(() => {
     //Testing code inside here
-    let businessID = 7;
-    let doctorID = 10;
+    let businessID = 1;
+    let doctorID = 2;
     let patientID = 1;
     server[businessID][doctorID].addToQueue(new NewPatient(patientID));
     server[businessID][doctorID].addToQueue(new NewPatient(patientID));
