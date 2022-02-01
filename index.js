@@ -53,6 +53,7 @@ io.use(function (socket, next) {
         next(new Error('Authentication error')); // could crash the server..?
     }
 }).on("connection", (socket) => {
+    console.log("CONNECTED");
     socket.on("JOIN_ROOM", (data) => { //working
         //setup what is required.
         let doctor = server[data.business][data.doctor];
@@ -89,6 +90,7 @@ io.use(function (socket, next) {
 
         // updatePatient(data.business, data.doctor)
         io.to(doctor.id).emit("UPDATE_PATIENT")
+        console.log(doctor)
     });
 
     // socket.on("newPatient", async (data) => {
@@ -158,8 +160,8 @@ io.use(function (socket, next) {
 /** status info */
 setTimeout(() => {
     //Testing code inside here
-    let businessID = 1;
-    let doctorID = 2;
+    let businessID = 7;
+    let doctorID = 10;
     let patientID = 1;
     server[businessID][doctorID].addToQueue(new NewPatient(patientID));
     server[businessID][doctorID].addToQueue(new NewPatient(patientID));

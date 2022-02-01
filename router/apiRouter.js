@@ -27,6 +27,7 @@ class ApiRouter {
       console.error(err);
     }
   }
+
   async patientConfig(req, res) {
     try {
       let response = await this.knex("patients").select("*");
