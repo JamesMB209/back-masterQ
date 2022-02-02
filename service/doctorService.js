@@ -38,6 +38,8 @@ class Doctor {
 		/**
 		 * Adds a patient object to the respective doctors queue.
 		 */
+		patient.state = "DOCTOR"
+		patient.doctor = this.id;
 		this.queue.push(patient);
 	}
 

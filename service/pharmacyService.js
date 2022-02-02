@@ -1,5 +1,6 @@
 class Pharmacy {
     constructor() {
+		this.id = "pharmacy"
 		this.queue = [];
     }
 
@@ -31,6 +32,8 @@ class Pharmacy {
 		/**
 		 * Adds a patient object to the respective doctors queue.
 		 */
+		patient.state = "PHARMACY";
+		patient.doctor = this.id;
 		this.queue.push(patient);
 	}
 

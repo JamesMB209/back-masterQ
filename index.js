@@ -56,23 +56,49 @@ io.use(function (socket, next) {
     console.log("CONNECTED");
     socket.on("JOIN_ROOM", (data) => { //working
         //setup what is required.
+        console.log(server[data.business][data.doctor])
+        console.log(data.doctor)
         let doctor = server[data.business][data.doctor];
 
         //do stuff
         socket.join(doctor.id);
         io.to(doctor.id).emit("UPDATE_PATIENT")
+        console.log("update Patient")
     });
 
-    socket.on("GET_QUEUE_POSTITION", (data) => { //working
+    socket.on("CHECKIN", (data) => {
+        let doctor = server[data.business][data.doctor];
+        let patientID = socket.decoded.id
+
+        doctor.addToQueue(new NewPatient(patientID));
+        // console.log(doctor)
+        console.group('checked in');
+        // io.to(doctor.id).emit("UPDATE_PATIENT")
+        // console.log("update Patient")
+    })
+
+    socket.on("GET_PATIENT_OBJ", (data) => { //working
+        console.log("GET_PATIENT_OBJ")
         //setup what is required.
+        console.log(data)
+        // console.log(server[data.business][data.doctor].id)
         let doctor = server[data.business][data.doctor];
         let patientID = socket.decoded.id
 
         //do stuff
         doctor.patient(patientID).then((patient) => {
-            io.to(doctor.id).emit(socket.handshake.query.token, patient.queuePosition)
-        }).catch((err) => {
-            io.to(doctor.id).emit(socket.handshake.query.token, err)
+            io.to(doctor.id).emit(socket.handshake.query.token, patient)
+        }).catch(() => {
+            // io.to(doctor.id).emit(socket.handshake.query.token, err)
+            // if not found check in the pharmacy.
+            server[data.business]['pharmacy'].patient(patientID).then((patient) => {
+                socket.join(`pharmacy${server[data.business].id}`);
+                io.to(`pharmacy${server[data.business].id}`).emit(socket.handshake.query.token, patient)
+
+            }).catch((err) => {
+                // io.to(doctor.id).emit(socket.handshake.query.token, patient)
+                io.to(doctor.id).emit(socket.handshake.query.token, err)
+            })
         })
     });
 
@@ -86,11 +112,16 @@ io.use(function (socket, next) {
         // history.saveDiagnosis(doctor.id, doctor.queue[0], data.diagnosis);
         // history.saveBooking(doctor.queue[0], true);
         //advance the doctors queue.
-        business.pharmacy.addToQueue(doctor.next());
+        let patient = doctor.next();
+        if (patient !== undefined) {
+            business.pharmacy.addToQueue(patient)
+        }
+        // business.pharmacy.addToQueue(doctor.next());
 
         // updatePatient(data.business, data.doctor)
         io.to(doctor.id).emit("UPDATE_PATIENT")
-        console.log(doctor)
+        // console.log(doctor)
+        // console.log(business.pharmacy);
     });
 
     // socket.on("newPatient", async (data) => {
@@ -159,31 +190,31 @@ io.use(function (socket, next) {
 
 /** status info */
 setTimeout(() => {
-    //Testing code inside here
-    let businessID = 7;
-    let doctorID = 10;
-    let patientID = 1;
-    server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-    server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-    patientID = 2;
-    server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-    patientID = 3;
-    server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+    // //Testing code inside here
+    // let businessID = 7;
+    // let doctorID = 10;
+    // let patientID = 1;
+    // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+    // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+    // patientID = 2;
+    // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+    // patientID = 3;
+    // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
 
     //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
 }, 1000)
 
-setTimeout(() => {
-    //Result of your testing code.
-    // let businessID = 3;
-    // let doctorID = 4;
-    // let patientID = 1;
-    // console.log(server);
-    // // console.log(server[businessID])
-    // console.log(server[businessID][doctorID])
-    // console.log(server[businessID][doctorID].patient(patientID).then((patient) => {console.log(patient)}));
+// setInterval(() => {
+//     // Result of your testing code.
+//     let businessID = 7;
+//     let doctorID = 10;
+//     // let patientID = 1;
+//     // console.log(server);
+//     // // console.log(server[businessID])
+//     console.log(server[businessID][doctorID])
+//     // console.log(server[businessID][doctorID].patient(patientID).then((patient) => {console.log(patient)}));
 
-}, 2000)
+// }, 100000)
 
 /** App init */
 http.listen(process.env.PORT);
