@@ -62,6 +62,13 @@ io.use(function (socket, next) {
         io.to(doctor.id).emit("UPDATE_PATIENT")
     });
 
+    // for the billboard
+    socket.on("refreshDat", (data) => {
+        let businessID = socket.decoded.id;
+        socket.emit("UPDATE_BILLBOARD", server[businessID])
+    })
+
+
     socket.on("GET_QUEUE_POSTITION", (data) => { //working
         //setup what is required.
         let doctor = server[data.business][data.doctor];
@@ -107,13 +114,8 @@ io.use(function (socket, next) {
     //     // socket.emit("updateMain");
     // });
     ///////////////// THIS PART IS FOR BUSINESSES ONLY!(MAYBE) --
-    
     socket.on("UPDATE_DOCTOR", (data) => {
-        let business = server[data.business];
         let doctor = server[data.business][data.doctor];
-        // let doctor = doctors[data - 1];
-        // io.to(doctor.id).emit("updateDoctor");
-        // io.emit("refreshThat")
         socket.emit(socket.handshake.query.token, doctor);
     });
 
