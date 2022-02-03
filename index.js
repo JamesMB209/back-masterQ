@@ -18,6 +18,7 @@ const Pharmacy = require("./service/pharmacyService");
 const AuthRouter = require('./router/authRouter.js')
 const authRouter = new AuthRouter(express, axios, jwt, knex, config)
 const ApiRouter = require("./router/apiRouter");
+const ObjRouter = require("./router/objRouter.js");
 const apiRouter = new ApiRouter(express, jwt, knex, authClass);
 
 /** App configuration */
@@ -33,14 +34,21 @@ const io = require("socket.io")(http);
 /** create server */
 const server = new Queue();
 
+/** Init routers */
+const objRouter = new ObjRouter(express, axios, jwt, knex, authClass, server)
+
 /** Router */
 app.use('/', authRouter.router())
 app.use("/api", apiRouter.router())
+app.use('/obj', objRouter.router())
 
 
+let nextCount = 0;
+let joinRoomCount = 0;
 
 /** Socket Logic - to abstract later - you know or maybe not */
-io.use(function (socket, next) {
+io
+.use(function (socket, next) {
     if (socket.handshake.query && socket.handshake.query.token) {
         jwt.verify(socket.handshake.query.token, config.jwtSecret, function (err, decoded) {
             if (err) return next(new Error('Authentication error'));
@@ -51,19 +59,27 @@ io.use(function (socket, next) {
     else {
         next(new Error('Authentication error')); // could crash the server..?
     }
-}).on("connection", (socket) => {
+})
+.on("connection", (socket) => {
     console.log("CONNECTED");
+    console.log(socket.decoded)
+
     socket.on("JOIN_ROOM", (data) => { //working
         //setup what is required.
-        console.log(server[data.business][data.doctor])
-        console.log(data.doctor)
         let doctor = server[data.business][data.doctor];
 
         //do stuff
         socket.join(doctor.id);
-        io.to(doctor.id).emit("UPDATE_PATIENT")
-        console.log("update Patient")
+        console.log(joinRoomCount++)
+        setTimeout(() => {
+            io.to(doctor.id).emit("UPDATE_PATIENT")
+        }, 500)
     });
+
+    setTimeout(() => {
+        console.log("message sent")
+        socket.emit("UPDATE_PATIENT")
+    }, 1000)
 
     // for the billboard
     socket.on("refreshDat", (data) => {
@@ -75,39 +91,71 @@ io.use(function (socket, next) {
         let doctor = server[data.business][data.doctor];
         let patientID = socket.decoded.id
 
+        console.log("heresa a massive problem")
         doctor.addToQueue(new NewPatient(patientID));
-        // console.log(doctor)
-        console.group('checked in');
+
+        //added
+        socket.join(doctor.id);
         // io.to(doctor.id).emit("UPDATE_PATIENT")
-        // console.log("update Patient")
+
+        doctor.patient(patientID).then((patient) => {
+            // io.to(doctor.id).emit(address, patient)
+            console.log(patient.queuePosition)
+
+            setTimeout(() => {
+                console.log("i sent the message")
+                io.to(doctor.id).emit(address, patient)
+            }, 500)
+        }).catch((err) => {
+            io.to(doctor.id).emit(address, err)
+            // // if not found check in the pharmacy.
+            // server[data.business]['pharmacy'].patient(patientID).then((patient) => {
+            //     socket.join(`pharmacy${server[data.business].id}`);
+            //     io.to(`pharmacy${server[data.business].id}`).emit(address, patient)
+
+            // }).catch((err) => {
+            //     // io.to(doctor.id).emit(socket.handshake.query.token, patient)
+            //     io.to(doctor.id).emit(address, err)
+            // })
+        })
     })
 
     socket.on("GET_PATIENT_OBJ", (data) => { //working
-        console.log("GET_PATIENT_OBJ")
         //setup what is required.
+        console.log("get patient")
         console.log(data)
-        // console.log(server[data.business][data.doctor].id)
+
+        if(data.business == "" || data.doctor == "") {return}
+
         let doctor = server[data.business][data.doctor];
         let patientID = socket.decoded.id
+        let address = socket.handshake.query.token.slice(-10);
+        console.log(address)
+
 
         //do stuff
         doctor.patient(patientID).then((patient) => {
-            io.to(doctor.id).emit(socket.handshake.query.token, patient)
-        }).catch(() => {
-            // io.to(doctor.id).emit(socket.handshake.query.token, err)
-            // if not found check in the pharmacy.
-            server[data.business]['pharmacy'].patient(patientID).then((patient) => {
-                socket.join(`pharmacy${server[data.business].id}`);
-                io.to(`pharmacy${server[data.business].id}`).emit(socket.handshake.query.token, patient)
+            // io.to(doctor.id).emit(address, patient)
+            console.log(patient.queuePosition)
+            setTimeout(() => {
+                io.to(doctor.id).emit(address, patient)
+            }, 500)
+        }).catch((err) => {
+            io.to(doctor.id).emit(address, err)
+            // // if not found check in the pharmacy.
+            // server[data.business]['pharmacy'].patient(patientID).then((patient) => {
+            //     socket.join(`pharmacy${server[data.business].id}`);
+            //     io.to(`pharmacy${server[data.business].id}`).emit(address, patient)
 
-            }).catch((err) => {
-                // io.to(doctor.id).emit(socket.handshake.query.token, patient)
-                io.to(doctor.id).emit(socket.handshake.query.token, err)
-            })
+            // }).catch((err) => {
+            //     // io.to(doctor.id).emit(socket.handshake.query.token, patient)
+            //     io.to(doctor.id).emit(address, err)
+            // })
         })
     });
 
     socket.on("NEXT", (data) => {  //working but have not completed history
+        console.log("next ran")
         let business = server[data.business];
         let doctor = server[data.business][data.doctor];
 
@@ -124,7 +172,9 @@ io.use(function (socket, next) {
         // business.pharmacy.addToQueue(doctor.next());
 
         // updatePatient(data.business, data.doctor)
-        io.to(doctor.id).emit("UPDATE_PATIENT")
+            console.log("emitted update patient")
+            io.to(doctor.id).emit("UPDATE_PATIENT")
+
         // console.log(doctor)
         // console.log(business.pharmacy);
     });

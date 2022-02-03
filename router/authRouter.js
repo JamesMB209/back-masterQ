@@ -65,7 +65,8 @@ class AuthRouter {
     // we have no logic to handle if the email is taken.
     console.log('Sign up')
     console.log(req.body)
-    if (req.body.email && req.body.password) {
+    if (req.body.email && req.body.password && req.body.type) {
+      let table = req.body.type;
       let hashedPassword = await bcrypt.hash(req.body.password, 10)
 
       //Re-orgnaise the data so it matches the database names.
@@ -88,7 +89,8 @@ class AuthRouter {
       console.log(userId)
 
       let payload = {
-        id: userId[0].id
+        id: userId[0].id,
+        table: table
       }
       let token = this.jwt.sign(payload, this.config.jwtSecret)
       console.log(token)
