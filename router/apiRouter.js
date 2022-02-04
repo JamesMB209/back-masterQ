@@ -12,6 +12,7 @@ class ApiRouter {
     router.get("/patients", this.patientConfig.bind(this));
     return router;
   }
+  
   async config(req, res) {
     try {
       let business = await this.knex("business_users").select("id", "name");
