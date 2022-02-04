@@ -14,6 +14,7 @@ class AuthRouter {
 
     router.post('/api/login', this.postLogin.bind(this))
     router.post('/api/signup', this.postSignup.bind(this))
+    router.post('/api/update', this.postUpdate.bind(this))
     // router.post('/api/login/facebook', this.postFacebook.bind(this))
     return router
   }
@@ -95,6 +96,23 @@ class AuthRouter {
       res.json({ token })
     } else {
       res.sendStatus(402)
+    }
+  }
+
+  async postUpdate(req, res) {
+    let secret = req.body.secret;
+    let password = req.body.password;
+    let table = req.body.type;
+    console.log('Change password initiated.')
+    if (req.body.secret && req.body.password) {
+      let hashedPassword = await bcrypt.hash(password, 10)
+      console.log(hashedPassword)
+      let bUser = await this.knex(table).where({secret_token: secret}).update({password: hashedPassword})
+      console.log(bUser)
+    }
+    else {
+      console.log("failed to update password")
+      res.sendStatus(401)
     }
   }
 
