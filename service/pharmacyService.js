@@ -32,7 +32,8 @@ class Pharmacy {
 		/**
 		 * Adds a patient object to the respective doctors queue.
 		 */
-		 patient.assigned = {doctor:"Pharmacy" , room:"Pharmacy"}
+		
+		patient.assigned = {doctor:"Pharmacy" , room:"Pharmacy"}
 		patient.state = "PHARMACY";
 		patient.doctor = this.id;
 		this.queue.push(patient);

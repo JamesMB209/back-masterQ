@@ -72,11 +72,11 @@ io
         }
 
         const emitUpdate = (businessID, doctorID) => {
-            let queues = `${businessID}:${doctorID}`
+            let room = `${businessID}:${doctorID}`
             let business = `Business:${businessID}`
 
             socket.join(room);
-            io.to(queues).emit("UPDATE_PATIENT");
+            io.to(room).emit("UPDATE_PATIENT");
             socket.emit("UPDATE_BUSINESS");
         }
 
