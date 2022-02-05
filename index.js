@@ -72,10 +72,12 @@ io
         }
 
         const emitUpdate = (businessID, doctorID) => {
-            let room = `${businessID}:${doctorID}`
+            let queues = `${businessID}:${doctorID}`
+            let business = `Business:${businessID}`
 
             socket.join(room);
-            io.to(room).emit("UPDATE_PATIENT")
+            io.to(queues).emit("UPDATE_PATIENT");
+            socket.emit("UPDATE_BUSINESS");
         }
 
         socket.on("CHECKIN", (data) => {
@@ -87,6 +89,7 @@ io
             /** Queue actions */
             doctor.addToQueue(new NewPatient(patientID));
 
+            
             /** Update actions */ 
             emitUpdate(business.id, doctor.id)
         })
@@ -98,7 +101,8 @@ io
             /** History actions */
             // history.saveDiagnosis(doctor.id, doctor.queue[0], data.diagnosis);
             // history.saveBooking(doctor.queue[0], true);
-
+            
+            doctor.patient(patientID).then((patient) => console.log(patient))
             /** Queue actions */
             let patient = doctor.next();
             if (patient !== undefined) {

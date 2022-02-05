@@ -36,8 +36,10 @@ class Doctor {
 	
 	addToQueue(patient) {
 		/**
-		 * Adds a patient object to the respective doctors queue.
+		 * Adds a patient object to the respective doctors queue and any information about that queue/doctor.
 		 */
+
+		patient.assigned = {doctor:this.fullName , room:this.room}
 		patient.state = "DOCTOR"
 		patient.doctor = this.id;
 		this.queue.push(patient);
