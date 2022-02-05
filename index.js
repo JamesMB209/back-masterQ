@@ -71,8 +71,15 @@ io
             return [business, doctor, patientID]
         }
 
+        const emitUpdate = (businessID, doctorID) => {
+            let room = `${businessID}:${doctorID}`
+
+            socket.join(room);
+            io.to(room).emit("UPDATE_PATIENT")
+        }
+
         socket.on("CHECKIN", (data) => {
-            if (data.business == null || data.doctor == null) { console.log(`Invalid data was sent from.`); return }
+            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             let [business, doctor, patientID] = loadData(data);
 
             /** History actions */
@@ -80,13 +87,12 @@ io
             /** Queue actions */
             doctor.addToQueue(new NewPatient(patientID));
 
-            /** Update actions */
-            socket.join(doctor.id);
-            io.to(doctor.id).emit("UPDATE_PATIENT")
+            /** Update actions */ 
+            emitUpdate(business.id, doctor.id)
         })
 
         socket.on("NEXT", (data) => {  //working but have not completed history
-            if (data.business == null || data.doctor == null) { console.log(`Invalid data was sent from.`); return }
+            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             let [business, doctor, patientID] = loadData(data);
 
             /** History actions */
@@ -100,8 +106,7 @@ io
             }
 
             /** Update actions */
-            socket.join(doctor.id);
-            io.to(doctor.id).emit("UPDATE_PATIENT")
+            emitUpdate(business.id, doctor.id)
         });
 
         socket.on("disconnect", () => {

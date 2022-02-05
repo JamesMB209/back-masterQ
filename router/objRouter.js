@@ -23,7 +23,7 @@ class ObjRouter {
         let doctor = req.body.doctor;
         let patient = req.user[0].id;
         
-        console.log(`The patient OBJ was requested for: ${business}, ${doctor}, ${patient}`)
+        console.log(`The patient OBJ was requested for: ${business}:${doctor}, ${patient}`)
         
             this.server[business][doctor].patient(patient).then((patient) => {
                 res.send(patient)
