@@ -65,11 +65,17 @@ io
     .on("connection", (socket) => {
         console.log(`CONNECTED: socket user - ${socket.decoded.id}`);
 
-        const loadData = (data) => {
+        const loadDataPatient = (data) => {
             let business = server[data.business];
             let doctor = server[data.business][data.doctor];
             let patientID = socket.decoded.id;
             return [business, doctor, patientID]
+        }
+
+        const loadDataBusiness = (data) => {
+            let business = server[socket.decoded.id];
+            let doctor = server[socket.decoded.id][data.doctor];
+            return [business, doctor]
         }
 
         const emitUpdate = (businessID, doctorID) => {
@@ -83,39 +89,43 @@ io
 
         socket.on("CHECKIN", (data) => {
             if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
-            let [business, doctor, patientID] = loadData(data);
+            let [business, doctor, patientID] = loadDataPatient(data);
 
             /** History actions */
 
             /** Queue actions */
             doctor.addToQueue(new NewPatient(patientID));
 
-            
-            /** Update actions */ 
+
+            /** Update actions */
             emitUpdate(business.id, doctor.id)
         })
 
         socket.on("NEXT", (data) => {  //working but have not completed history
             if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
-            let [business, doctor, patientID] = loadData(data);
+            //for testing with the patient app
+            // let [business, doctor, patientID] = loadDataPatient(data);
+            //for production with the business app
+            let [business, doctor] = loadDataBusiness(data);
 
-            /** History actions */
             // history.saveDiagnosis(doctor.id, doctor.queue[0], data.diagnosis);
             // history.saveAppointmentHistory(business, doctor, doctor.queue[0], true);
-            
+
             /** Queue actions */
             let patient = doctor.next();
 
             if (doctor.id !== "pharmacy") {
                 /** Logic for a patient departing a doctors queue */
-                history.saveAppointmentHistoryDoctor(business, doctor, patient);
+                /** History actions */
+                // history.saveAppointmentHistoryDoctor(business, doctor, patient);
 
                 /** move the patient to the pharmacy queue */
                 business.pharmacy.addToQueue(patient)
-                
+
             } else {
                 /** Logic for a patient departing the pharmacy queue */
-                history.saveAppointmentHistoryPharmacy(business, doctor, patient);
+                /** History actions */
+                // history.saveAppointmentHistoryPharmacy(business, doctor, patient);
             }
 
             /** Update actions */
