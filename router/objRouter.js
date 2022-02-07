@@ -22,18 +22,18 @@ class ObjRouter {
         let business = req.body.business;
         let doctor = req.body.doctor;
         let patient = req.user[0].id;
-        
+
         console.log(`The patient OBJ was requested for: ${business}:${doctor}, ${patient}`)
-        
-            this.server[business][doctor].patient(patient).then((patient) => {
+
+        this.server[business][doctor].patient(patient).then((patient) => {
+            res.send(patient)
+        }).catch(() => {
+            this.server[business].pharmacy.patient(patient).then((patient) => {
                 res.send(patient)
-            }).catch((err) => {
-                this.server[business].pharmacy.patient(patient).then((patient) => {
-                    res.send(patient)
-                }).catch((err) => {
-                    res.send({ state: "REVIEW" })
-                })
+            }).catch(() => {
+                res.send({ state: "REVIEW" })
             })
+        })
     }
 
     doctor(req, res) {

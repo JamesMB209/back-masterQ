@@ -32,31 +32,59 @@ class History {
 		// })
 	}
 
-	saveBooking(patient, completed = true, checkedIn = true) {
-		/** 
-		 * Adds a new booking the the history, requires the patient object.
-		 * second value is a flag if the booking was completed.  (default: true)
-		 * third value for checked in. (default: true)
-		 */
+	/** 
+	 * Adds a new booking the the history, requires the business object, Doctor object, and patient object.
+	 * 4th value is a flag if the booking was completed.  (default: true)
+	 * 5th value for checked in. (default: true)
+	 */
+	async saveAppointmentHistoryDoctor(business, doctor, patient, completed = false) {
 
 		if (patient === undefined) {
-			console.error("There are no patients left");
+			console.error("There was no patient sent the the doctor history");
 			return;
 		}
 
-		knex('appointment_history')
-			.insert({
-				patient_id: patient.id,
-				doctor_id: patient.assignedDoctor,
-				arrival: patient.arrived,
-				departure: new Date(),
-				checked_in: checkedIn,
-				completed: completed,
-			}).then(() => {
-				console.log("an appointment was saved to the database")
-			}).catch((err) => {
-				console.error(err);
-			})
+		console.log("tried to save to the database")
+
+		try {
+			let appointmentHistoryID = await knex('appointment_history')
+				.returning('id')
+				.insert({
+					business_id: business.id,
+					doctor_id: doctor.id,
+					patient_id: patient.id,
+					arrival: patient.arrived,
+					departure_doctor: new Date(),
+					completed: completed,
+				})
+
+			patient.appointmentHistoryID = appointmentHistoryID;
+
+		} catch (err) {
+			console.log(err)
+		}
+	}
+
+	async saveAppointmentHistoryPharmacy(business, doctor, patient, completed = true) {
+
+		if (patient === undefined) {
+			console.error("There was no patient sent the the pharmacy history");
+			return;
+		}
+
+		console.log("tried to save to the database _ pharmacy")
+
+		try {
+			await knex('appointment_history')
+				.where("id", "=", patient.appointmentHistoryID)
+				.update({
+					departure_pharmacy: new Date(),
+					completed: completed,
+				})
+				console.log('success updating appointment history')
+		} catch (err) {
+			console.log(err)
+		}
 	}
 
 	/** 

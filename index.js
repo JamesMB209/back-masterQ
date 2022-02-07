@@ -36,6 +36,7 @@ console.log(`Backend running on port: ${process.env.PORT} using the ${process.en
 
 /** create server */
 const server = new Queue();
+const history = new History();
 
 /** Init routers */
 const authRouter = new AuthRouter(express, axios, jwt, knex, config)
@@ -100,13 +101,21 @@ io
 
             /** History actions */
             // history.saveDiagnosis(doctor.id, doctor.queue[0], data.diagnosis);
-            // history.saveBooking(doctor.queue[0], true);
+            // history.saveAppointmentHistory(business, doctor, doctor.queue[0], true);
             
-            doctor.patient(patientID).then((patient) => console.log(patient))
             /** Queue actions */
             let patient = doctor.next();
-            if (patient !== undefined) {
+
+            if (doctor.id !== "pharmacy") {
+                /** Logic for a patient departing a doctors queue */
+                history.saveAppointmentHistoryDoctor(business, doctor, patient);
+
+                /** move the patient to the pharmacy queue */
                 business.pharmacy.addToQueue(patient)
+                
+            } else {
+                /** Logic for a patient departing the pharmacy queue */
+                history.saveAppointmentHistoryPharmacy(business, doctor, patient);
             }
 
             /** Update actions */

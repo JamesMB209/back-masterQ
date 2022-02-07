@@ -9,6 +9,10 @@ exports.up = function (knex) {
     table.foreign("doctor_id").references("doctors.id");
     table.integer("patient_id");
     table.foreign("patient_id").references("patients.id");
+    table.datetime("arrival");
+    table.datetime("departure_doctor");
+    table.datetime("departure_pharmacy");
+    table.boolean("completed")
   });
 };
 
