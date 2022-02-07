@@ -19,6 +19,7 @@ const Queue = require("./service/queueService");
 const AuthRouter = require('./router/authRouter.js')
 const ApiRouter = require("./router/apiRouter");
 const ObjRouter = require("./router/objRouter.js");
+const ReviewRouter = require('./router/reviewRouter');
 
 /** App configuration */
 const app = express();
@@ -34,19 +35,21 @@ const io = require("socket.io")(http);
 http.listen(process.env.PORT);
 console.log(`Backend running on port: ${process.env.PORT} using the ${process.env.ENVIROMENT} enviroment`);
 
-/** create server */
+/** create server/classes */
 const server = new Queue();
 const history = new History();
 
 /** Init routers */
 const authRouter = new AuthRouter(express, axios, jwt, knex, config)
 const apiRouter = new ApiRouter(express, jwt, knex, authClass);
-const objRouter = new ObjRouter(express, axios, jwt, knex, authClass, server)
+const objRouter = new ObjRouter(express, axios, jwt, knex, authClass, server);
+const reviewRouter = new ReviewRouter(express, jwt, knex, authClass);
 
 /** Router */
-app.use('/', authRouter.router())
-app.use("/api", apiRouter.router())
-app.use('/obj', objRouter.router())
+app.use('/', authRouter.router());
+app.use("/api", apiRouter.router());
+app.use('/obj', objRouter.router());
+app.use('/review', reviewRouter.router());
 
 /** Socket Logic - to abstract later - you know or maybe not */
 io
@@ -91,25 +94,24 @@ io
             if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             let [business, doctor, patientID] = loadDataPatient(data);
 
+            let patient = new NewPatient(patientID);
+
             /** History actions */
+            history.saveAppointmentHistoryCheckin(business, doctor, patient);
 
             /** Queue actions */
-            doctor.addToQueue(new NewPatient(patientID));
-
+            doctor.addToQueue(patient);
 
             /** Update actions */
             emitUpdate(business.id, doctor.id)
         })
 
         socket.on("NEXT", (data) => {  //working but have not completed history
-            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            if (data.doctor == null) { console.log(`Invalid data`); return }
             //for testing with the patient app
-            // let [business, doctor, patientID] = loadDataPatient(data);
+            let [business, doctor, patientID] = loadDataPatient(data);
             //for production with the business app
-            let [business, doctor] = loadDataBusiness(data);
-
-            // history.saveDiagnosis(doctor.id, doctor.queue[0], data.diagnosis);
-            // history.saveAppointmentHistory(business, doctor, doctor.queue[0], true);
+            // let [business, doctor] = loadDataBusiness(data);
 
             /** Queue actions */
             let patient = doctor.next();
@@ -117,7 +119,7 @@ io
             if (doctor.id !== "pharmacy") {
                 /** Logic for a patient departing a doctors queue */
                 /** History actions */
-                // history.saveAppointmentHistoryDoctor(business, doctor, patient);
+                history.saveAppointmentHistoryDoctor(business, doctor, patient);
 
                 /** move the patient to the pharmacy queue */
                 business.pharmacy.addToQueue(patient)
@@ -125,7 +127,7 @@ io
             } else {
                 /** Logic for a patient departing the pharmacy queue */
                 /** History actions */
-                // history.saveAppointmentHistoryPharmacy(business, doctor, patient);
+                history.saveAppointmentHistoryPharmacy(business, doctor, patient);
             }
 
             /** Update actions */
