@@ -91,22 +91,25 @@ io
              * 
             */
 
-            let business = server[socket.decoded.id];
-            let doctor = server[socket.decoded.id][data.doctor];
-            let patientID = data.patientID;
-            return [business, doctor, patientID]
-
-            /** If using the paitent front end buttons for testing mode */
-            // let business = server[data.business];
-            // let doctor = server[data.business][data.doctor];
+            // let business = server[socket.decoded.id];
+            // let doctor = server[socket.decoded.id][data.doctor];
             // let patientID = data.patientID;
             // return [business, doctor, patientID]
+
+            /** If using the paitent front end buttons for testing mode */
+            let business = server[data.business];
+            let doctor = server[data.business][data.doctor];
+            let patientID = data.patientID;
+            return [business, doctor, patientID]
         }
 
         const emitUpdate = (businessID, doctorID) => {
             let queue = `${businessID}:${doctorID}`
             let business = `Business:${businessID}`
 
+            // socket.join = `${businessID}:${doctorID}` // probably a bug here
+
+            console.log(`emitted update to ${businessID}:${doctorID}`)
             io.to(queue).emit("UPDATE_PATIENT");
             io.to(business).emit("UPDATE_BUSINESS");
         }
@@ -116,22 +119,42 @@ io
          * Patient front end buttons 
          * 
          * */
-        
+
+         socket.on("DOCTOR_ROOM", (data) => {
+            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            let [business, doctor, patientID] = loadDataPatient(data);
+
+            /** Update actions */
+            socket.join(`${business.id}:${doctor.id}`);
+            console.log(`switched rooms ${business.id}:${doctor.id}`)
+        })
+
+        socket.on("PHARMACY_ROOM", (data) => {
+            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            let [business, doctor, patientID] = loadDataPatient(data);
+
+            /** Update actions */
+            socket.leave(`${business.id}:${doctor.id}`);
+            socket.join(`${business.id}:pharmacy`)
+            console.log(`switched rooms ${business.id}:pharmacy`)
+        })
+
         socket.on("CHECKIN", (data) => {
             if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             let [business, doctor, patientID] = loadDataPatient(data);
-            
+
             let patient = new NewPatient(patientID);
-            
+
             /** Queue actions */
             doctor.addToQueue(patient);
-            
+
             /** History actions */
             // history.saveAppointmentHistoryCheckin(business, doctor, patient);
-            
+
             /** Update actions */
-            socket.join(`${business.id}:${doctor.id}`);
+            // socket.join(`${business.id}:${doctor.id}`);
             emitUpdate(business.id, doctor.id)
+            socket.emit("UPDATE_PATIENT");
         })
 
 
@@ -144,9 +167,9 @@ io
         socket.on("NEXT", (data) => {  //working but have not completed history
             console.log("NEXT")
             //for testing with the patient app
-            // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             //for production with the business app
-            if (data.doctor == null) { console.log(`Invalid data`); return }
+            // if (data.doctor == null) { console.log(`Invalid data`); return }
 
             let [business, doctor, patientID] = loadDataBusiness(data);
 
@@ -163,7 +186,7 @@ io
                 /** move the patient to the pharmacy queue */
                 business.pharmacy.addToQueue(patient)
 
-            } else if (doctor.id === "pharmacy") {
+            } else if (doctor.id === "pharmacy" && patient !== undefined) {
                 console.log(data)
                 /** Logic for a patient departing the pharmacy queue */
 
@@ -172,15 +195,16 @@ io
             }
 
             /** Update actions */
+            // socket.join(`${business.id}:${doctor.id}`);
             emitUpdate(business.id, doctor.id)
         });
 
         socket.on("MOVE_UP", (data) => {
             console.log("MOVE_UP")
             //for testing with the patient app
-            // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             //for production with the business app
-            if (data.doctor == null) { console.log(`Invalid data`); return }
+            // if (data.doctor == null) { console.log(`Invalid data`); return }
 
             let [business, doctor, patientID] = loadDataBusiness(data);
 
@@ -194,9 +218,9 @@ io
         socket.on("DELETE", (data) => {
             console.log("DELETE")
             //for testing with the patient app
-            // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             //for production with the business app
-            if (data.doctor == null) { console.log(`Invalid data`); return }
+            // if (data.doctor == null) { console.log(`Invalid data`); return }
 
             let [business, doctor, patientID] = loadDataBusiness(data);
 
@@ -223,13 +247,12 @@ io
 /** status info */
 setTimeout(() => {
     // //Testing code inside here
-    let businessID = 1;
-    let doctorID = 1;
-    let patients = [1, 2, 8, 11, 12];
+    // let businessID = 1;
+    // let doctorID = 1;
+    // let patients = [1, 2, 8, 11, 12];
 
-    for (patientID in patients) {
-        server[businessID][doctorID].addToQueue(new NewPatient(patients[patientID]));
-        console.log('Added patient with ID:' + patients[patientID])
-    }
+    // for (patientID in patients) {
+    //     server[businessID][doctorID].addToQueue(new NewPatient(patients[patientID]));
+    //     console.log('Added patient with ID:' + patients[patientID])
+    // }
 }, 1000)
-
