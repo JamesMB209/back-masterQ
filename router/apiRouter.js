@@ -9,7 +9,7 @@ class ApiRouter {
   router() {
     let router = this.express.Router();
     router.get("/config", this.auth.authenticate(), this.config.bind(this));
-    router.get("/patients", this.patientConfig.bind(this));
+    router.get("/patients", this.auth.authenticate(), this.patientConfig.bind(this));
     return router;
   }
   
