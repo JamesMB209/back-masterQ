@@ -46,6 +46,7 @@ const history = new History();
 const authRouter = new AuthRouter(express, axios, jwt, knex, config);
 const apiRouter = new ApiRouter(express, jwt, knex, authClass);
 const objRouter = new ObjRouter(express, axios, jwt, knex, authClass, server);
+const reviewRouter = new ReviewRouter(express, jwt, knex, authClass);
 const settingsRouter = new SettingsRouter(express, jwt, knex, authClass, server);
 /** Router */
 app.use("/", authRouter.router());
@@ -223,4 +224,3 @@ setTimeout(() => {
 
   //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
 }, 1000);
-const reviewRouter = new ReviewRouter(express, jwt, knex, authClass);
