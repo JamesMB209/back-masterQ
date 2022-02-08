@@ -9,7 +9,7 @@ class ApiRouter {
   router() {
     let router = this.express.Router();
     router.get("/config", this.auth.authenticate(), this.config.bind(this));
-    router.get("/patients", this.auth.authenticate(), this.patientConfig.bind(this));
+    router.get("/patients", this.auth.authenticate(), this.patientConfig.bind(this)); // auth was missing here. we really need it on this one if its broken something.
     return router;
   }
   

@@ -6,7 +6,6 @@ class NewPatient {
     constructor(id) {
         this.id = id;
         this.history = [];
-        this.arrived = new Date();
         this.init();
     }
 

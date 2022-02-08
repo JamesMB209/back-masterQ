@@ -20,6 +20,7 @@ const AuthRouter = require("./router/authRouter.js");
 const ApiRouter = require("./router/apiRouter");
 const ObjRouter = require("./router/objRouter.js");
 const SettingsRouter = require("./router/settingsRouter");
+const ReviewRouter = require('./router/reviewRouter');
 
 /** App configuration */
 const app = express();
@@ -37,7 +38,7 @@ console.log(
   `Backend running on port: ${process.env.PORT} using the ${process.env.ENVIROMENT} enviroment`
 );
 
-/** create server */
+/** create server/classes */
 const server = new Queue();
 const history = new History();
 
@@ -50,131 +51,132 @@ const settingsRouter = new SettingsRouter(express, jwt, knex, authClass, server)
 app.use("/", authRouter.router());
 app.use("/api", apiRouter.router());
 app.use("/obj", objRouter.router());
+app.use('/review', reviewRouter.router());
 app.use("/setting", settingsRouter.router())
 
+
 /** Socket Logic - to abstract later - you know or maybe not */
-io.use(function (socket, next) {
-  if (socket.handshake.query && socket.handshake.query.token) {
-    jwt.verify(
-      socket.handshake.query.token,
-      config.jwtSecret,
-      function (err, decoded) {
-        if (err) return next(new Error("Authentication error"));
-        socket.decoded = decoded;
-        next();
-      }
-    );
-  } else {
-    next(new Error("Authentication error"));
-  }
-}).on("connection", (socket) => {
-  console.log(`CONNECTED: socket user - ${socket.decoded.id}`);
+io
+    .use(function (socket, next) {
+        if (socket.handshake.query && socket.handshake.query.token) {
+            jwt.verify(socket.handshake.query.token, config.jwtSecret, function (err, decoded) {
+                if (err) return next(new Error('Authentication error'));
+                socket.decoded = decoded;
+                next();
+            });
+        }
+        else {
+            next(new Error('Authentication error'));
+        }
+    })
+    .on("connection", (socket) => {
+        console.log(`CONNECTED: socket user - ${socket.decoded.id}`);
 
-  const loadDataPatient = (data) => {
-    let business = server[data.business];
-    let doctor = server[data.business][data.doctor];
-    let patientID = socket.decoded.id;
-    return [business, doctor, patientID];
-  };
+        const loadDataPatient = (data) => {
+            let business = server[data.business];
+            let doctor = server[data.business][data.doctor];
+            let patientID = socket.decoded.id;
+            return [business, doctor, patientID]
+        }
 
-  const loadDataBusiness = (data) => {
-    let business = server[socket.decoded.id];
-    let doctor = server[socket.decoded.id][data.doctor];
-    return [business, doctor];
-  };
+        const loadDataBusiness = (data) => {
+            let business = server[socket.decoded.id];
+            let doctor = server[socket.decoded.id][data.doctor];
+            return [business, doctor]
+        }
 
-  const emitUpdate = (businessID, doctorID) => {
-    let room = `${businessID}:${doctorID}`;
-    let business = `Business:${businessID}`;
+        const emitUpdate = (businessID, doctorID) => {
+            let room = `${businessID}:${doctorID}`
+            let business = `Business:${businessID}`
 
-    socket.join(room);
-    io.to(room).emit("UPDATE_PATIENT");
-    socket.emit("UPDATE_BUSINESS");
-  };
+            socket.join(room);
+            io.to(room).emit("UPDATE_PATIENT");
+            socket.emit("UPDATE_BUSINESS");
+        }
 
-  socket.on("CHECKIN", (data) => {
-    if (data.business == null || data.doctor == null) {
-      console.log(`Invalid data`);
-      return;
-    }
-    let [business, doctor, patientID] = loadDataPatient(data);
+        socket.on("CHECKIN", (data) => {
+            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            let [business, doctor, patientID] = loadDataPatient(data);
 
-    /** History actions */
+            let patient = new NewPatient(patientID);
 
-    /** Queue actions */
-    doctor.addToQueue(new NewPatient(patientID));
+            /** History actions */
+            // history.saveAppointmentHistoryCheckin(business, doctor, patient);
 
-    /** Update actions */
-    emitUpdate(business.id, doctor.id);
-  });
+            /** Queue actions */
+            doctor.addToQueue(patient);
 
-  socket.on("NEXT", (data) => {
-    //working but have not completed history
-    if (data.doctor == null) {
-      console.log("Invalid data");
-      return;
-    }
-    //for testing with the patient app
-    // let [business, doctor, patientID] = loadDataPatient(data);
-    //for production with the business app
-    let [business, doctor] = loadDataBusiness(data);
+            /** Update actions */
+            emitUpdate(business.id, doctor.id)
+        })
 
-    // history.saveDiagnosis(doctor.id, doctor.queue[0], data.diagnosis);
-    // history.saveAppointmentHistory(business, doctor, doctor.queue[0], true);
+        socket.on("NEXT", (data) => {  //working but have not completed history
+            console.log("NEXT")
+            //for testing with the patient app
+            // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            // let [business, doctor, patientID] = loadDataPatient(data);
+            //for production with the business app
+            if (data.doctor == null) { console.log(`Invalid data`); return }
+            let [business, doctor] = loadDataBusiness(data);
 
-    /** Queue actions */
-    let patient = doctor.next();
+            /** Queue actions */
+            let patient = doctor.next();
 
-    if (doctor.id !== "pharmacy") {
-      /** Logic for a patient departing a doctors queue */
-      /** History actions */
-      // history.saveAppointmentHistoryDoctor(business, doctor, patient);
+            if (doctor.id !== "pharmacy" && patient !== undefined) {
+                console.log(data)
+                /** Logic for a patient departing a doctors queue */
+                /** History actions */
+                // history.saveAppointmentHistoryDoctor(business, doctor, patient);
 
-      /** move the patient to the pharmacy queue */
-      business.pharmacy.addToQueue(patient);
-    } else {
-      /** Logic for a patient departing the pharmacy queue */
-      /** History actions */
-      // history.saveAppointmentHistoryPharmacy(business, doctor, patient);
-    }
+                /** move the patient to the pharmacy queue */
+                business.pharmacy.addToQueue(patient)
 
-    /** Update actions */
-    emitUpdate(business.id, doctor.id);
-  });
+            } else {
+                console.log(data)
+                /** Logic for a patient departing the pharmacy queue */
+                /** History actions */
+                // history.saveAppointmentHistoryPharmacy(business, doctor, patient);
+            }
 
-  socket.on("disconnect", () => {
-    console.log(`DISCONECTED: socket user - ${socket.decoded.id}`);
-  });
+            /** Update actions */
+            emitUpdate(business.id, doctor.id)
+        });
 
-  ///////////////// UNFINISHED ///////////////////// --
+        socket.on("disconnect", () => {
+            console.log(`DISCONECTED: socket user - ${socket.decoded.id}`);
+        })
 
-  socket.on("moveUp", (data) => {
-    let doctor = doctors[data.doctor - 1];
 
-    doctor.move(`${data.hkid}`);
-    io.to(doctor.id).emit("updatePatient");
-    io.emit("updateMain");
-  });
+        ///////////////// UNFINISHED ///////////////////// --
 
-  socket.on("removeQ", (data) => {
-    let doctor = doctors[data.doctor - 1];
+        socket.on("moveUp", (data) => {
+            let doctor = doctors[data.doctor - 1];
 
-    //update the appointment history database.
-    doctor
-      .patient(data.hkid)
-      .then((patient) => {
-        history.saveBooking(patient, false);
-      })
-      .catch((err) => console.log(err));
+            doctor.move(`${data.hkid}`);
+            io.to(doctor.id).emit("updatePatient");
+            io.emit("updateMain");
+        });
 
-    //remove from the doctors queue.
-    doctor.remove(data.hkid);
+        socket.on("removeQ", (data => {
+            let doctor = doctors[data.doctor - 1];
 
-    io.to(doctor.id).emit("updatePatient");
-    socket.emit("updateMain");
-    io.emit("updateDoctor");
-  });
-});
+            //update the appointment history database.
+            doctor.patient(data.hkid)
+                .then((patient) => {
+                    history.saveBooking(patient, false);
+                })
+                .catch(err => console.log(err));
+
+            //remove from the doctors queue.
+            doctor.remove(data.hkid);
+
+            io.to(doctor.id).emit("updatePatient")
+            socket.emit("updateMain")
+            io.emit("updateDoctor");
+        }))
+
+    });
+
 
 /** status info */
 setTimeout(() => {
@@ -221,3 +223,4 @@ setTimeout(() => {
 
   //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
 }, 1000);
+const reviewRouter = new ReviewRouter(express, jwt, knex, authClass);

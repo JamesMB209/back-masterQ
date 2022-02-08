@@ -44,9 +44,11 @@ class ObjRouter {
         res.send(this.server[business][doctor])
     }
 
+
+    /** Only for business front end */
     business(req, res) {
         console.log("business router ran")
-        let business = req.body.business;
+        let business = req.user[0].id;
 
         res.send(this.server[business])
     }

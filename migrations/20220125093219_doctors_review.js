@@ -3,8 +3,9 @@ exports.up = function (knex) {
     table.increments().unique();
     table.integer("appointment_id");
     table.foreign("appointment_id").references("appointment_history.id");
+    table.integer("score");
     table.string("review");
-    table.timestamps(true, false);
+    table.timestamps(false, true);
   });
 };
 
