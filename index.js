@@ -97,7 +97,7 @@ io
             let patient = new NewPatient(patientID);
 
             /** History actions */
-            history.saveAppointmentHistoryCheckin(business, doctor, patient);
+            // history.saveAppointmentHistoryCheckin(business, doctor, patient);
 
             /** Queue actions */
             doctor.addToQueue(patient);
@@ -107,27 +107,31 @@ io
         })
 
         socket.on("NEXT", (data) => {  //working but have not completed history
-            if (data.doctor == null) { console.log(`Invalid data`); return }
+            console.log("NEXT")
             //for testing with the patient app
-            let [business, doctor, patientID] = loadDataPatient(data);
+            // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            // let [business, doctor, patientID] = loadDataPatient(data);
             //for production with the business app
-            // let [business, doctor] = loadDataBusiness(data);
+            if (data.doctor == null) { console.log(`Invalid data`); return }
+            let [business, doctor] = loadDataBusiness(data);
 
             /** Queue actions */
             let patient = doctor.next();
 
-            if (doctor.id !== "pharmacy") {
+            if (doctor.id !== "pharmacy" && patient !== undefined) {
+                console.log(data)
                 /** Logic for a patient departing a doctors queue */
                 /** History actions */
-                history.saveAppointmentHistoryDoctor(business, doctor, patient);
+                // history.saveAppointmentHistoryDoctor(business, doctor, patient);
 
                 /** move the patient to the pharmacy queue */
                 business.pharmacy.addToQueue(patient)
 
             } else {
+                console.log(data)
                 /** Logic for a patient departing the pharmacy queue */
                 /** History actions */
-                history.saveAppointmentHistoryPharmacy(business, doctor, patient);
+                // history.saveAppointmentHistoryPharmacy(business, doctor, patient);
             }
 
             /** Update actions */
@@ -180,15 +184,14 @@ io
 /** status info */
 setTimeout(() => {
     // //Testing code inside here
-    // let businessID = 7;
-    // let doctorID = 10;
-    // let patientID = 1;
-    // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-    // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-    // patientID = 2;
-    // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-    // patientID = 3;
-    // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+    let businessID = 1;
+    let doctorID = 1;
+    let patientID = 1;
+    server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+    patientID = 2;
+    server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+    patientID = 3;
+    server[businessID][doctorID].addToQueue(new NewPatient(patientID));
 
-    //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
+    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
 }, 1000)

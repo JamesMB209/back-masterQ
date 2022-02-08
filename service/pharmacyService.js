@@ -43,7 +43,9 @@ class Pharmacy {
 		/**
 		 * Advances the doctors queue by one, by removing the patient in position 0.
 		 */
-		return this.queue.shift();
+
+		//removed return
+		this.queue.shift();
 	}
 
 	length() {
