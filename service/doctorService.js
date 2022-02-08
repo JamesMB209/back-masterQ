@@ -68,6 +68,8 @@ class Doctor {
 				this.queue.splice(this.patientIndex(id), 1);
 				this.queue.splice(position, 0, patient);
 			}
+		}).catch(() => {
+			console.log(`Error no patient found with id: ${id} in queue:${this.id}`)
 		})
     }
 
