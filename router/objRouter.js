@@ -1,7 +1,7 @@
 class ObjRouter {
-    constructor(express, axios, jwt, knex, auth, server) {
+    constructor(express, jwt, knex, auth, server) {
         this.express = express;
-        this.axios = axios;
+
         this.jwt = jwt;
         this.knex = knex;
         this.auth = auth;
