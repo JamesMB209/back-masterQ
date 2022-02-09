@@ -21,9 +21,9 @@ class Queue {
         }
     }
 
-    async reload (data) {
+    async reload (oldBusiness) {
         try {
-            let [business] = await knex("business_users").select('*').where("id", data.id);
+            let [business] = await knex("business_users").select('*').where("id", oldBusiness.id);
             this[business.id] = new Business(business);
         } catch (err) {
             console.log("failed to reload business")

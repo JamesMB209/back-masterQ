@@ -45,7 +45,15 @@ class SettingsRouter {
   }
 
   async getDoctors(req, res) {
-    console.log("you are wanted")
+    try {
+      let doctors = await this.knex("doctors")
+          .select("*")
+          .where("business_id",1)
+
+      res.send(doctors)
+    } catch (err) {
+      console.error("something went wrong", err)
+    }
 
   }
 }
