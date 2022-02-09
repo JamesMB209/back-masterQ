@@ -43,8 +43,8 @@ const history = new History();
 
 /** Init routers */
 const authRouter = new AuthRouter(express, axios, jwt, knex, config)
+const objRouter = new ObjRouter(express, jwt, knex, authClass, server);
 const apiRouter = new ApiRouter(express, jwt, knex, authClass);
-const objRouter = new ObjRouter(express, axios, jwt, knex, authClass, server);
 const reviewRouter = new ReviewRouter(express, jwt, knex, authClass);
 const diagnosisRouter = new DiagnosisRouter(express, jwt, knex, authClass);
 
@@ -53,7 +53,7 @@ app.use("/", authRouter.router());
 app.use("/api", apiRouter.router());
 app.use("/obj", objRouter.router());
 app.use("/review", reviewRouter.router());
-app.use("/diagnosis" , diagnosisRouter.router());
+app.use("/diagnosis", diagnosisRouter.router());
 
 /** Socket Logic - to abstract later - you know or maybe not */
 io
@@ -122,7 +122,7 @@ io
          * 
          * */
 
-         socket.on("DOCTOR_ROOM", (data) => {
+        socket.on("DOCTOR_ROOM", (data) => {
             if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             let [business, doctor, patientID] = loadDataPatient(data);
 
@@ -183,6 +183,8 @@ io
 
                 /** History actions */
                 history.saveAppointmentHistoryDoctor(business, doctor, patient);
+
+                if (data.prescribedDrugs) { patient.prescribedDrugs = data.prescribedDrugs } // not tested.
 
                 /** move the patient to the pharmacy queue */
                 business.pharmacy.addToQueue(patient)
@@ -249,11 +251,12 @@ setTimeout(() => {
     // //Testing code inside here
     let businessID = 1;
     let doctorID = [1, 2, 3];
-    let patients = [1, 2,3, 5, 8, 11, 12];
+    let patients = [1, 2, 3, 5, 8, 11, 12];
 
     for (index in doctorID) {
-    for (patientID in patients) {
-        server[businessID][doctorID[index]].addToQueue(new NewPatient(patients[patientID]));
-        console.log("Added patient with ID:" + patients[patientID])
-    }}
+        for (patientID in patients) {
+            server[businessID][doctorID[index]].addToQueue(new NewPatient(patients[patientID]));
+            console.log("Added patient with ID:" + patients[patientID])
+        }
+    }
 }, 1000)
