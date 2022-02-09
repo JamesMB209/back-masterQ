@@ -6,7 +6,7 @@ const knexFile = require("./knexfile.js");
 const knex = require("knex")(knexFile[process.env.ENVIROMENT]);
 const jwt = require("jsonwebtoken");
 const authClass = require("./auth")();
-const axios = require("axios")
+const axios = require("axios");
 const config = require("./config")
 
 /** Imports from local code */
@@ -16,6 +16,7 @@ const Pharmacy = require("./service/pharmacyService");
 const Business = require("./service/businessService");
 const NewPatient = require("./service/newPatientService");
 const Queue = require("./service/queueService");
+const SettingsRouter = require("./router/settingsRouter");
 const AuthRouter = require("./router/authRouter.js")
 const ApiRouter = require("./router/apiRouter");
 const ObjRouter = require("./router/objRouter.js");
@@ -35,7 +36,9 @@ const io = require("socket.io")(http);
 
 /** App init */
 http.listen(process.env.PORT);
-console.log(`Backend running on port: ${process.env.PORT} using the ${process.env.ENVIROMENT} enviroment`);
+console.log(
+  `Backend running on port: ${process.env.PORT} using the ${process.env.ENVIROMENT} enviroment`
+);
 
 /** create server\classes */
 const server = new Queue();
@@ -46,14 +49,16 @@ const authRouter = new AuthRouter(express, axios, jwt, knex, config)
 const objRouter = new ObjRouter(express, jwt, knex, authClass, server);
 const apiRouter = new ApiRouter(express, jwt, knex, authClass);
 const reviewRouter = new ReviewRouter(express, jwt, knex, authClass);
+const settingsRouter = new SettingsRouter(express, jwt, knex, authClass, server);
 const diagnosisRouter = new DiagnosisRouter(express, jwt, knex, authClass);
 
 /** Router */
 app.use("/", authRouter.router());
 app.use("/api", apiRouter.router());
 app.use("/obj", objRouter.router());
-app.use("/review", reviewRouter.router());
-app.use("/diagnosis", diagnosisRouter.router());
+app.use('/review', reviewRouter.router());
+app.use("/setting", settingsRouter.router())
+app.use("/diagnosis" , diagnosisRouter.router());
 
 /** Socket Logic - to abstract later - you know or maybe not */
 io
@@ -239,16 +244,53 @@ io
     });
 
 
-
-
-
-
-
-
-
 /** status info */
 setTimeout(() => {
+//   // //Testing code inside here
+  let businessID = 1;
+  let doctorID = 2;
+  let patientID = 1;
+  // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 2;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 3;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+
+//   //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
+}, 1000);
+/** status info */
+setTimeout(() => {
+  // //Testing code inside here
+  let businessID = 1;
+  let doctorID = 3;
+  let patientID = 4;
+  // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 5;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 6;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+
+  //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
+}, 1000);
+/** status info */
+setTimeout(() => {
+  // //Testing code inside here
+  let businessID = 1;
+  let doctorID = 3;
+  let patientID = 7;
+  // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 8;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 9;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+
+  //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
+}, 1000);
     // //Testing code inside here
+    setTimeout(() => {
     let businessID = 1;
     let doctorID = [1, 2, 3];
     let patients = [1, 2, 3, 5, 8, 11, 12];
