@@ -2,12 +2,12 @@
 const cors = require("cors");
 const express = require("express");
 const bodyParser = require("body-parser");
-const knexFile = require('./knexfile.js');
-const knex = require('knex')(knexFile[process.env.ENVIROMENT]);
-const jwt = require('jsonwebtoken');
+const knexFile = require("./knexfile.js");
+const knex = require("knex")(knexFile[process.env.ENVIROMENT]);
+const jwt = require("jsonwebtoken");
 const authClass = require("./auth")();
-const axios = require('axios')
-const config = require('./config')
+const axios = require("axios")
+const config = require("./config")
 
 /** Imports from local code */
 const Doctor = require("./service/doctorService");
@@ -16,10 +16,11 @@ const Pharmacy = require("./service/pharmacyService");
 const Business = require("./service/businessService");
 const NewPatient = require("./service/newPatientService");
 const Queue = require("./service/queueService");
-const AuthRouter = require('./router/authRouter.js')
+const AuthRouter = require("./router/authRouter.js")
 const ApiRouter = require("./router/apiRouter");
 const ObjRouter = require("./router/objRouter.js");
-const ReviewRouter = require('./router/reviewRouter');
+const ReviewRouter = require("./router/reviewRouter");
+const DiagnosisRouter = require("./router/diagnosisRouter");
 const { emit } = require("process");
 
 /** App configuration */
@@ -36,7 +37,7 @@ const io = require("socket.io")(http);
 http.listen(process.env.PORT);
 console.log(`Backend running on port: ${process.env.PORT} using the ${process.env.ENVIROMENT} enviroment`);
 
-/** create server/classes */
+/** create server\classes */
 const server = new Queue();
 const history = new History();
 
@@ -45,35 +46,37 @@ const authRouter = new AuthRouter(express, axios, jwt, knex, config)
 const apiRouter = new ApiRouter(express, jwt, knex, authClass);
 const objRouter = new ObjRouter(express, axios, jwt, knex, authClass, server);
 const reviewRouter = new ReviewRouter(express, jwt, knex, authClass);
+const diagnosisRouter = new DiagnosisRouter(express, jwt, knex, authClass);
 
 /** Router */
-app.use('/', authRouter.router());
+app.use("/", authRouter.router());
 app.use("/api", apiRouter.router());
-app.use('/obj', objRouter.router());
-app.use('/review', reviewRouter.router());
+app.use("/obj", objRouter.router());
+app.use("/review", reviewRouter.router());
+app.use("/diagnosis" , diagnosisRouter.router());
 
 /** Socket Logic - to abstract later - you know or maybe not */
 io
     .use(function (socket, next) {
         if (socket.handshake.query && socket.handshake.query.token) {
             jwt.verify(socket.handshake.query.token, config.jwtSecret, function (err, decoded) {
-                if (err) return next(new Error('Authentication error'));
+                if (err) return next(new Error("Authentication error"));
                 socket.decoded = decoded;
                 next();
             });
         }
         else {
-            next(new Error('Authentication error'));
+            next(new Error("Authentication error"));
         }
     })
     .on("connection", (socket) => {
         console.log(`CONNECTED: socket user - ${socket.decoded.id}`);
 
         //If the account is a business, add it to its own "room".
-        if (socket.decoded.table === 'business_users') {
-            console.log('Initilized as a business')
+        if (socket.decoded.table === "business_users") {
+            console.log("Initilized as a business")
             socket.join(`Business:${socket.decoded.id}`)
-            io.to(`Business:${socket.decoded.id}`).emit("UPDATE_BUSINESS"); //check.
+            // io.to(`Business:${socket.decoded.id}`).emit("UPDATE_BUSINESS"); //check.
         }
 
         const loadDataPatient = (data) => {
@@ -86,28 +89,27 @@ io
         const loadDataBusiness = (data) => {
             /** Business/Production mode 
              * 
-             * READ ME! - Swap the comments below depending on which front end you're using.
+             * READ ME! - Swap the comments below depending on which front end you"re using.
              * also uncomment the data checks in the business buttons(sockets).
              * 
             */
+            console.log(data, socket.decoded)
 
-            // let business = server[socket.decoded.id];
-            // let doctor = server[socket.decoded.id][data.doctor];
-            // let patientID = data.patientID;
-            // return [business, doctor, patientID]
-
-            /** If using the paitent front end buttons for testing mode */
-            let business = server[data.business];
-            let doctor = server[data.business][data.doctor];
+            let business = server[socket.decoded.id];
+            let doctor = server[socket.decoded.id][data.doctor];
             let patientID = data.patientID;
             return [business, doctor, patientID]
+
+            /** If using the paitent front end buttons for testing mode */
+            // let business = server[data.business];
+            // let doctor = server[data.business][data.doctor];
+            // let patientID = data.patientID;
+            // return [business, doctor, patientID]
         }
 
         const emitUpdate = (businessID, doctorID) => {
             let queue = `${businessID}:${doctorID}`
             let business = `Business:${businessID}`
-
-            // socket.join = `${businessID}:${doctorID}` // probably a bug here
 
             console.log(`emitted update to ${businessID}:${doctorID}`)
             io.to(queue).emit("UPDATE_PATIENT");
@@ -149,10 +151,9 @@ io
             doctor.addToQueue(patient);
 
             /** History actions */
-            // history.saveAppointmentHistoryCheckin(business, doctor, patient);
+            history.saveAppointmentHistoryCheckin(business, doctor, patient);
 
             /** Update actions */
-            // socket.join(`${business.id}:${doctor.id}`);
             emitUpdate(business.id, doctor.id)
             socket.emit("UPDATE_PATIENT");
         })
@@ -167,9 +168,9 @@ io
         socket.on("NEXT", (data) => {  //working but have not completed history
             console.log("NEXT")
             //for testing with the patient app
-            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             //for production with the business app
-            // if (data.doctor == null) { console.log(`Invalid data`); return }
+            if (data.doctor == null) { console.log(`Invalid data`); return }
 
             let [business, doctor, patientID] = loadDataBusiness(data);
 
@@ -181,7 +182,7 @@ io
                 /** Logic for a patient departing a doctors queue */
 
                 /** History actions */
-                // history.saveAppointmentHistoryDoctor(business, doctor, patient);
+                history.saveAppointmentHistoryDoctor(business, doctor, patient);
 
                 /** move the patient to the pharmacy queue */
                 business.pharmacy.addToQueue(patient)
@@ -191,20 +192,19 @@ io
                 /** Logic for a patient departing the pharmacy queue */
 
                 /** History actions */
-                // history.saveAppointmentHistoryPharmacy(business, doctor, patient);
+                history.saveAppointmentHistoryPharmacy(business, doctor, patient);
             }
 
             /** Update actions */
-            // socket.join(`${business.id}:${doctor.id}`);
             emitUpdate(business.id, doctor.id)
         });
 
         socket.on("MOVE_UP", (data) => {
             console.log("MOVE_UP")
             //for testing with the patient app
-            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             //for production with the business app
-            // if (data.doctor == null) { console.log(`Invalid data`); return }
+            if (data.doctor == null) { console.log(`Invalid data`); return }
 
             let [business, doctor, patientID] = loadDataBusiness(data);
 
@@ -218,9 +218,9 @@ io
         socket.on("DELETE", (data) => {
             console.log("DELETE")
             //for testing with the patient app
-            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             //for production with the business app
-            // if (data.doctor == null) { console.log(`Invalid data`); return }
+            if (data.doctor == null) { console.log(`Invalid data`); return }
 
             let [business, doctor, patientID] = loadDataBusiness(data);
 
@@ -253,6 +253,6 @@ setTimeout(() => {
 
     // for (patientID in patients) {
     //     server[businessID][doctorID].addToQueue(new NewPatient(patients[patientID]));
-    //     console.log('Added patient with ID:' + patients[patientID])
+    //     console.log("Added patient with ID:" + patients[patientID])
     // }
 }, 1000)

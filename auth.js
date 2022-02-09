@@ -12,7 +12,6 @@ module.exports = () => {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
     },
     async (payload, done) => {
-      // console.log(payload, 'Auth.js line 15') //usefull to debug remove later
       let user = await knex
         .select('*')
         .from(payload.table)
