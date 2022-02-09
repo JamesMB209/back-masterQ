@@ -247,12 +247,13 @@ io
 /** status info */
 setTimeout(() => {
     // //Testing code inside here
-    // let businessID = 1;
-    // let doctorID = 1;
-    // let patients = [1, 2, 8, 11, 12];
+    let businessID = 1;
+    let doctorID = [1, 2, 3];
+    let patients = [1, 2,3, 5, 8, 11, 12];
 
-    // for (patientID in patients) {
-    //     server[businessID][doctorID].addToQueue(new NewPatient(patients[patientID]));
-    //     console.log("Added patient with ID:" + patients[patientID])
-    // }
+    for (index in doctorID) {
+    for (patientID in patients) {
+        server[businessID][doctorID[index]].addToQueue(new NewPatient(patients[patientID]));
+        console.log("Added patient with ID:" + patients[patientID])
+    }}
 }, 1000)
