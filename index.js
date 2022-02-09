@@ -78,7 +78,7 @@ io
         if (socket.decoded.table === 'business_users') {
             console.log('Initilized as a business')
             socket.join(`Business:${socket.decoded.id}`)
-            io.to(`Business:${socket.decoded.id}`).emit("UPDATE_BUSINESS"); //check.
+            io.emit("UPDATE_BUSINESS"); //check.
         }
 
         const loadDataPatient = (data) => {
@@ -220,9 +220,9 @@ io
 
 /** status info */
 setTimeout(() => {
-  // //Testing code inside here
+//   // //Testing code inside here
   let businessID = 1;
-  let doctorID = 1;
+  let doctorID = 2;
   let patientID = 1;
   // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
@@ -231,13 +231,13 @@ setTimeout(() => {
   patientID = 3;
   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
 
-  //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
+//   //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
 }, 1000);
 /** status info */
 setTimeout(() => {
   // //Testing code inside here
   let businessID = 1;
-  let doctorID = 2;
+  let doctorID = 3;
   let patientID = 4;
   // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
