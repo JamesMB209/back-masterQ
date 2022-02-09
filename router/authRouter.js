@@ -83,10 +83,13 @@ class AuthRouter {
         drug_allergy: req.body.drugAllergies
       }
 
+      try {
       let userId = await this.knex('patients')
         .insert(patient)
         .returning('id')
-
+      } catch (err) {
+        console.error("Account already exists")
+      }
       console.log(userId)
 
       let payload = {

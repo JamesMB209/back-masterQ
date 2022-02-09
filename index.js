@@ -7,7 +7,7 @@ const knex = require("knex")(knexFile[process.env.ENVIROMENT]);
 const jwt = require("jsonwebtoken");
 const authClass = require("./auth")();
 const axios = require("axios");
-const config = require("./config");
+const config = require("./config")
 
 /** Imports from local code */
 const Doctor = require("./service/doctorService");
@@ -16,11 +16,12 @@ const Pharmacy = require("./service/pharmacyService");
 const Business = require("./service/businessService");
 const NewPatient = require("./service/newPatientService");
 const Queue = require("./service/queueService");
-const AuthRouter = require("./router/authRouter.js");
+const SettingsRouter = require("./router/settingsRouter");
+const AuthRouter = require("./router/authRouter.js")
 const ApiRouter = require("./router/apiRouter");
 const ObjRouter = require("./router/objRouter.js");
-const SettingsRouter = require("./router/settingsRouter");
-const ReviewRouter = require('./router/reviewRouter');
+const ReviewRouter = require("./router/reviewRouter");
+const DiagnosisRouter = require("./router/diagnosisRouter");
 const { emit } = require("process");
 
 /** App configuration */
@@ -39,7 +40,7 @@ console.log(
   `Backend running on port: ${process.env.PORT} using the ${process.env.ENVIROMENT} enviroment`
 );
 
-/** create server/classes */
+/** create server\classes */
 const server = new Queue();
 const history = new History();
 
@@ -49,36 +50,38 @@ const apiRouter = new ApiRouter(express, jwt, knex, authClass);
 const objRouter = new ObjRouter(express, axios, jwt, knex, authClass, server);
 const reviewRouter = new ReviewRouter(express, jwt, knex, authClass);
 const settingsRouter = new SettingsRouter(express, jwt, knex, authClass, server);
+const diagnosisRouter = new DiagnosisRouter(express, jwt, knex, authClass);
+
 /** Router */
 app.use("/", authRouter.router());
 app.use("/api", apiRouter.router());
 app.use("/obj", objRouter.router());
 app.use('/review', reviewRouter.router());
 app.use("/setting", settingsRouter.router())
-
+app.use("/diagnosis" , diagnosisRouter.router());
 
 /** Socket Logic - to abstract later - you know or maybe not */
 io
     .use(function (socket, next) {
         if (socket.handshake.query && socket.handshake.query.token) {
             jwt.verify(socket.handshake.query.token, config.jwtSecret, function (err, decoded) {
-                if (err) return next(new Error('Authentication error'));
+                if (err) return next(new Error("Authentication error"));
                 socket.decoded = decoded;
                 next();
             });
         }
         else {
-            next(new Error('Authentication error'));
+            next(new Error("Authentication error"));
         }
     })
     .on("connection", (socket) => {
         console.log(`CONNECTED: socket user - ${socket.decoded.id}`);
 
         //If the account is a business, add it to its own "room".
-        if (socket.decoded.table === 'business_users') {
-            console.log('Initilized as a business')
+        if (socket.decoded.table === "business_users") {
+            console.log("Initilized as a business")
             socket.join(`Business:${socket.decoded.id}`)
-            io.emit("UPDATE_BUSINESS"); //check.
+            // io.to(`Business:${socket.decoded.id}`).emit("UPDATE_BUSINESS"); //check.
         }
 
         const loadDataPatient = (data) => {
@@ -91,10 +94,11 @@ io
         const loadDataBusiness = (data) => {
             /** Business/Production mode 
              * 
-             * READ ME! - Swap the comments below depending on which front end you're using.
+             * READ ME! - Swap the comments below depending on which front end you"re using.
              * also uncomment the data checks in the business buttons(sockets).
              * 
             */
+            console.log(data, socket.decoded)
 
             let business = server[socket.decoded.id];
             let doctor = server[socket.decoded.id][data.doctor];
@@ -112,6 +116,7 @@ io
             let queue = `${businessID}:${doctorID}`
             let business = `Business:${businessID}`
 
+            console.log(`emitted update to ${businessID}:${doctorID}`)
             io.to(queue).emit("UPDATE_PATIENT");
             io.to(business).emit("UPDATE_BUSINESS");
         }
@@ -121,22 +126,41 @@ io
          * Patient front end buttons 
          * 
          * */
-        
+
+         socket.on("DOCTOR_ROOM", (data) => {
+            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            let [business, doctor, patientID] = loadDataPatient(data);
+
+            /** Update actions */
+            socket.join(`${business.id}:${doctor.id}`);
+            console.log(`switched rooms ${business.id}:${doctor.id}`)
+        })
+
+        socket.on("PHARMACY_ROOM", (data) => {
+            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            let [business, doctor, patientID] = loadDataPatient(data);
+
+            /** Update actions */
+            socket.leave(`${business.id}:${doctor.id}`);
+            socket.join(`${business.id}:pharmacy`)
+            console.log(`switched rooms ${business.id}:pharmacy`)
+        })
+
         socket.on("CHECKIN", (data) => {
             if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
             let [business, doctor, patientID] = loadDataPatient(data);
-            
+
             let patient = new NewPatient(patientID);
-            
+
             /** Queue actions */
             doctor.addToQueue(patient);
-            
+
             /** History actions */
-            // history.saveAppointmentHistoryCheckin(business, doctor, patient);
-            
+            history.saveAppointmentHistoryCheckin(business, doctor, patient);
+
             /** Update actions */
-            socket.join(`${business.id}:${doctor.id}`);
             emitUpdate(business.id, doctor.id)
+            socket.emit("UPDATE_PATIENT");
         })
 
 
@@ -163,17 +187,17 @@ io
                 /** Logic for a patient departing a doctors queue */
 
                 /** History actions */
-                // history.saveAppointmentHistoryDoctor(business, doctor, patient);
+                history.saveAppointmentHistoryDoctor(business, doctor, patient);
 
                 /** move the patient to the pharmacy queue */
                 business.pharmacy.addToQueue(patient)
 
-            } else if (doctor.id === "pharmacy") {
+            } else if (doctor.id === "pharmacy" && patient !== undefined) {
                 console.log(data)
                 /** Logic for a patient departing the pharmacy queue */
 
                 /** History actions */
-                // history.saveAppointmentHistoryPharmacy(business, doctor, patient);
+                history.saveAppointmentHistoryPharmacy(business, doctor, patient);
             }
 
             /** Update actions */
@@ -266,12 +290,12 @@ setTimeout(() => {
     // //Testing code inside here
     setTimeout(() => {
     let businessID = 1;
-    let doctorID = 1;
-    let patients = [1, 2, 8, 11, 12];
+    let doctorID = [1, 2, 3];
+    let patients = [1, 2,3, 5, 8, 11, 12];
 
+    for (index in doctorID) {
     for (patientID in patients) {
-        server[businessID][doctorID].addToQueue(new NewPatient(patients[patientID]));
-        console.log('Added patient with ID:' + patients[patientID])
-    }
+        server[businessID][doctorID[index]].addToQueue(new NewPatient(patients[patientID]));
+        console.log("Added patient with ID:" + patients[patientID])
+    }}
 }, 1000)
-
