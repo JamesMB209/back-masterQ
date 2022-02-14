@@ -31,10 +31,15 @@ class ApiRouter {
 
   async patientConfig(req, res) {
     try {
-      let response = await this.knex("patients").select("*");
-      res.send(response);
-    } catch (err) {
-      console.error(err);
+      // let response = await this.knex("appointment_history").select("*").where("business_id", req.user[0].id)
+      let response = await this.knex
+        .select("f_name", "l_name", "hkid", "email", "gender", "dob", "phone", "drug_allergy")
+        .from("patients")
+        .leftJoin("appointment_history", "patients.id", "appointment_history.patient_id")
+        .where("appointment_history.business_id", req.user[0].id)
+      res.send(response)
+    } catch (error) {
+      console.log(`MASSIVE FATLOAD OF ERROR ${error}`)
     }
   }
 }

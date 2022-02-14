@@ -9,14 +9,15 @@ class DiagnosisRouter {
     router() {
         let router = this.express.Router();
         router.get("/load", this.auth.authenticate(), this.get.bind(this));
-        router.post("/submit", this.auth.authenticate(), this.post.bind(this));
+        router.post("/submit", this.post.bind(this));
         return router;
     }
 
 
     /** Get the diagnosis history of the patient, requires the PatientID as a int or string */
     async get(req, res) {
-        const data = req.body;
+        const data = req.query; // get data from get request - do not change
+        console.log(req.query.patientID)
 
         try {
         let history = await this.knex
@@ -40,6 +41,7 @@ class DiagnosisRouter {
 
     /** Post a new entry to the diagnosis table, requires the PatientOBJ's appointmentHistoryID */
     async post(req, res) {
+        console.log(req.body)
         const data = req.body;
 
         try {

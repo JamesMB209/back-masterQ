@@ -7,7 +7,7 @@ exports.up = function (knex) {
     table.boolean("follow_up");
     table.boolean("sick_leave");
     table.decimal("visit_cost");
-    table.timestamps(true, false);
+    table.timestamps(false, true);
   });
 };
 

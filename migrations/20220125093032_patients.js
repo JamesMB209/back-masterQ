@@ -10,7 +10,7 @@ exports.up = function (knex) {
     table.string("dob");
     table.string("phone");
     table.string("drug_allergy");
-    table.timestamps(true, false);
+    table.timestamps(false, true);
   });
 };
 

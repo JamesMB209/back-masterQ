@@ -8,7 +8,7 @@ exports.up = function (knex) {
     table.integer("patient_id");
     table.foreign("patient_id").references("patients.id");
     table.datetime("date_time");
-    table.timestamps(true, false);
+    table.timestamps(false, true);
   });
 };
 
