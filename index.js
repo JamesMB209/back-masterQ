@@ -257,60 +257,60 @@ io
 
 
 /** status info */
-// setTimeout(() => {
-// //   // //Testing code inside here
-//   let businessID = 1;
-//   let doctorID = 2;
-//   let patientID = 1;
-//   // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-//   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-//   patientID = 2;
-//   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-//   patientID = 3;
-//   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-
-// //   //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
-// }, 1000);
-// /** status info */
-// setTimeout(() => {
+setTimeout(() => {
 //   // //Testing code inside here
-//   let businessID = 1;
-//   let doctorID = 3;
-//   let patientID = 4;
-//   // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-//   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-//   patientID = 5;
-//   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-//   patientID = 6;
-//   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  let businessID = 1;
+  let doctorID = 1;
+  let patientID = 1;
+  // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 2;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 3;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
 
 //   //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
-// }, 1000);
+}, 1000);
 // /** status info */
-// setTimeout(() => {
-//   // //Testing code inside here
-//   let businessID = 1;
-//   let doctorID = 3;
-//   let patientID = 7;
-//   // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-//   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-//   patientID = 8;
-//   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-//   patientID = 9;
-//   server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+setTimeout(() => {
+  // //Testing code inside here
+  let businessID = 1;
+  let doctorID = 2;
+  let patientID = 4;
+  // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 5;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 6;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
 
-//   //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
-// }, 1000);
+  //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
+}, 1000);
+// /** status info */
+setTimeout(() => {
+  // //Testing code inside here
+  let businessID = 1;
+  let doctorID = 3;
+  let patientID = 7;
+  // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 8;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+  patientID = 9;
+  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
+
+  //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
+}, 1000);
 //     // //Testing code inside here
-//     setTimeout(() => {
-//     let businessID = 1;
-//     let doctorID = [2, 3];
-//     let patients = [1, 2, 3, 5, 8, 11, 12];
+    setTimeout(() => {
+    let businessID = 1;
+    let doctorID = [2, 3];
+    let patients = [1, 2, 3, 5, 8, 11, 12];
 
-//     for (index in doctorID) {
-//         for (patientID in patients) {
-//             server[businessID][doctorID[index]].addToQueue(new NewPatient(patients[patientID]));
-//             console.log("Added patient with ID:" + patients[patientID])
-//         }
-//     }
-// }, 1000)
+    for (index in doctorID) {
+        for (patientID in patients) {
+            server[businessID][doctorID[index]].addToQueue(new NewPatient(patients[patientID]));
+            console.log("Added patient with ID:" + patients[patientID])
+        }
+    }
+}, 1000)

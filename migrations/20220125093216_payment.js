@@ -5,7 +5,7 @@ exports.up = function (knex) {
     table.foreign("appointment_id").references("appointment_history.id");
     table.decimal("amount");
     table.string("method");
-    table.timestamps(true, false);
+    table.timestamps(false, true);
   });
 };
 

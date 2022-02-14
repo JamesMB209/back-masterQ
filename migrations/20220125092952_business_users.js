@@ -5,7 +5,7 @@ exports.up = function (knex) {
     table.string("email").unique();
     table.string("password");
     table.string("secret_token");
-    table.timestamps(true, false);
+    table.timestamps(false, true);
   });
 };
 

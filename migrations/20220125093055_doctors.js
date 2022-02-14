@@ -13,7 +13,7 @@ exports.up = function (knex) {
     table.string("room");
     table.boolean("active").defaultTo(true)
     table.boolean("employed").defaultTo(true)
-    table.timestamps(true, false);
+    table.timestamps(false, true);
   });
 };
 

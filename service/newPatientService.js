@@ -20,7 +20,7 @@ class NewPatient {
 
             delete user.password;
             Object.assign(this, user);
-
+            ////////// DO NOT DELETE PLEASE I NEED THIS!!!! //////////////
             let history = await knex
             .select(
                 'diagnosis.created_at',
