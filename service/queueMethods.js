@@ -2,7 +2,7 @@ class QueueMethods {
 	constructor() {
 		this.queue = [];
 		this.stateManager = "CHECKIN"
-		this.designator = { doctor: "Not assigned", room: "Not assigned"}
+		this.designator = { doctor: "Not assigned", room: "Not assigned" }
 	}
 
 	/**
@@ -12,8 +12,8 @@ class QueueMethods {
 		return new Promise((res, rej) => {
 			if (this.queue.findIndex(patient => patient.id == id) === -1) { rej("patient not found.") };
 			let patient = this.queue.find(patient => patient.id == id);
-
 			patient.queuePosition = this.queue.findIndex(patient => patient.id == id);
+
 			res(patient);
 		})
 	}
@@ -28,14 +28,15 @@ class QueueMethods {
 	/**
 	 * Adds a patient object to the respective queue and any information about that queue/doctor.
 	 */
-	 addToQueue(patient) {
+	addToQueue(patient) {
 		this.patient(patient.id)
 			//first check if the patient is in the queue, if they are error.
 			.then(() => console.log(`The patient was already in one of the queues related to:${this.stateManager}`))
 			//else add them
 			.catch(() => {
 				patient.assigned = this.designator;
-				patient.state = this.stateManager
+				patient.state = this.stateManager;
+				patient.queuePosition = this.length(); //This sets a default queue position specificly for the pharmacy service.
 				this.queue.push(patient);
 			})
 	}
@@ -72,7 +73,9 @@ class QueueMethods {
 	 * removes the patient with the specified id.
 	 */
 	remove(id) {
-		this.queue.splice(this.patientIndex(id), 1);
+		let patient = this.patientIndex(id)
+		this.queue.splice(patient, 1);
+		return patient;
 	}
 }
 

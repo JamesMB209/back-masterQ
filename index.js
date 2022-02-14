@@ -11,9 +11,9 @@ const config = require("./config")
 
 /** Imports from local code */
 const Doctor = require("./service/doctorService");
-const History = require("./service/historyService");
 const Pharmacy = require("./service/pharmacyService");
 const Business = require("./service/businessService");
+const History = require("./service/historyService");
 const NewPatient = require("./service/newPatientService");
 const Queue = require("./service/queueService");
 const SettingsRouter = require("./router/settingsRouter");
@@ -22,7 +22,8 @@ const ApiRouter = require("./router/apiRouter");
 const ObjRouter = require("./router/objRouter.js");
 const ReviewRouter = require("./router/reviewRouter");
 const DiagnosisRouter = require("./router/diagnosisRouter");
-const { emit } = require("process");
+const PharmacyRouter = require("./router/pharmacyRouter");
+// const { emit } = require("process");
 
 /** App configuration */
 const app = express();
@@ -31,27 +32,26 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(authClass.initialize());
 
-/** socket config */
+/** Socket config */
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 
-/** App init */
+/** App/Socket init */
 http.listen(process.env.PORT);
-console.log(
-  `Backend running on port: ${process.env.PORT} using the ${process.env.ENVIROMENT} enviroment`
-);
+console.log(`Backend running on port: ${process.env.PORT} using the ${process.env.ENVIROMENT} enviroment`);
 
-/** create server\classes */
+/** Create server\classes */
 const server = new Queue();
 const history = new History();
 
 /** Init routers */
 const authRouter = new AuthRouter(express, axios, jwt, knex, config)
 const objRouter = new ObjRouter(express, jwt, knex, authClass, server);
+const settingsRouter = new SettingsRouter(express, jwt, knex, authClass, server);
 const apiRouter = new ApiRouter(express, jwt, knex, authClass);
 const reviewRouter = new ReviewRouter(express, jwt, knex, authClass);
-const settingsRouter = new SettingsRouter(express, jwt, knex, authClass, server);
 const diagnosisRouter = new DiagnosisRouter(express, jwt, knex, authClass);
+const pharmacyRouter = new PharmacyRouter(express, jwt, knex, authClass);
 
 /** Router */
 app.use("/", authRouter.router());
@@ -59,7 +59,8 @@ app.use("/api", apiRouter.router());
 app.use("/obj", objRouter.router());
 app.use('/review', reviewRouter.router());
 app.use("/setting", settingsRouter.router())
-app.use("/diagnosis" , diagnosisRouter.router());
+app.use("/diagnosis", diagnosisRouter.router());
+app.use("/pharmacy", pharmacyRouter.router());
 
 /** Socket Logic - to abstract later - you know or maybe not */
 io
@@ -80,9 +81,8 @@ io
 
         //If the account is a business, add it to its own "room".
         if (socket.decoded.table === "business_users") {
-            console.log("Initilized as a business")
+            console.log(`User ${socket.decoded.id} got initilized as a business`)
             socket.join(`Business:${socket.decoded.id}`)
-            // io.to(`Business:${socket.decoded.id}`).emit("UPDATE_BUSINESS"); //check.
         }
 
         const loadDataPatient = (data) => {
@@ -171,7 +171,7 @@ io
          * 
          * */
 
-        socket.on("NEXT", (data) => {  //working but have not completed history
+        socket.on("NEXT", (data) => {
             console.log("NEXT")
             //for testing with the patient app
             // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
@@ -184,19 +184,18 @@ io
             let patient = doctor.next();
 
             if (doctor.id !== "pharmacy" && patient !== undefined) {
-                console.log(data)
                 /** Logic for a patient departing a doctors queue */
 
                 /** History actions */
                 history.saveAppointmentHistoryDoctor(business, doctor, patient);
 
-                if (data.prescribedDrugs) { patient.prescribedDrugs = data.prescribedDrugs } // not tested.
+                if (data.prescribedDrugs) { patient.prescribedDrugs = data.prescribedDrugs }
 
                 /** move the patient to the pharmacy queue */
                 business.pharmacy.addToQueue(patient)
+                console.log(patient)
 
             } else if (doctor.id === "pharmacy" && patient !== undefined) {
-                console.log(data)
                 /** Logic for a patient departing the pharmacy queue */
 
                 /** History actions */
@@ -206,6 +205,35 @@ io
             /** Update actions */
             emitUpdate(business.id, doctor.id)
         });
+
+        // socket.on("CALL_TO_PHARMACY", (data) => {
+        //     console.log("CALL_TO_PHARMACY")
+        //     if (data.doctor == null) { console.log(`Invalid data`); return }
+
+        //     let [business, doctor, patientID] = loadDataBusiness(data);
+
+        //     /** Queue actions */
+        //     doctor.move(patientID, 0)
+
+        //     /** Update actions */
+        //     emitUpdate(business.id, doctor.id)
+        // });
+
+        // socket.on("MARK_COMPLETED", (data) => {
+        //     console.log("MARK_COMPLETED")
+        //     if (data.doctor == null) { console.log(`Invalid data`); return }
+
+        //     let [business, doctor, patientID] = loadDataBusiness(data);
+
+        //     /** Queue actions */
+        //     let patient = doctor.remove(patientID);
+
+        //     /** History actions */
+        //     history.saveAppointmentHistoryPharmacy(business, doctor, patient);
+
+        //     /** Update actions */
+        //     emitUpdate(business.id, doctor.id)
+        // })
 
         socket.on("MOVE_UP", (data) => {
             console.log("MOVE_UP")
@@ -242,11 +270,11 @@ io
         socket.on("RELOAD", () => {
             let business = server[socket.decoded.id];
 
-             /** Queue actions */
+            /** Queue actions */
             server.reload(business)
 
-             /** Update actions */
-             socket.emit("UPDATE_BUSINESS");
+            /** Update actions */
+            socket.emit("UPDATE_BUSINESS");
             //  emitUpdate(business.id, doctor.id)
         })
 

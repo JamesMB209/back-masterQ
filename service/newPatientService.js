@@ -21,17 +21,19 @@ class NewPatient {
             delete user.password;
             Object.assign(this, user);
 
-            let history = await knex
-            .select(
-                'diagnosis.created_at',
-                'diagnosis.diagnosis'
-            )
-            .from('appointment_history')
-            .leftJoin('diagnosis', 'diagnosis.appointment_id', 'appointment_history.id')
-            .leftJoin('patients', 'patients.id', 'appointment_history.patient_id') 
-            .where('patients.id', '=', this.id)
+            /** If required to send the history data with the patient object - turned off for now to do it via axios requests */
+
+            // let history = await knex
+            // .select(
+            //     'diagnosis.created_at',
+            //     'diagnosis.diagnosis'
+            // )
+            // .from('appointment_history')
+            // .leftJoin('diagnosis', 'diagnosis.appointment_id', 'appointment_history.id')
+            // .leftJoin('patients', 'patients.id', 'appointment_history.patient_id') 
+            // .where('patients.id', '=', this.id)
             
-            history.forEach(row => this.history.push(row));
+            // history.forEach(row => this.history.push(row));
 
         } catch (err) {
             console.log(err);

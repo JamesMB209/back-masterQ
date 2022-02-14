@@ -29,7 +29,7 @@ class DiagnosisRouter {
             .leftJoin('patients', 'patients.id', 'appointment_history.patient_id') 
             .where('patients.id', '=', data.patientID)
 
-            res.send(JSON.stringify(history));
+            res.send(history);
 
             } catch (err) {
                 console.log("error")
