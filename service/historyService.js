@@ -2,7 +2,6 @@ const knexFile = require('../knexfile').development;
 const knex = require('knex')(knexFile);
 
 class History {
-
 	/** 
 	 * Adds a new booking to the history, requires the business object, doctor object, and patient object.
 	 */
@@ -91,32 +90,6 @@ class History {
 			console.log(err);
 		}
 	}
-
-
-	// -------------- old DRQ ------------//
-	/** 
-	 * inserts a new row into the "diagnosis table"
-	 */
-	saveDiagnosis(data) {
-
-		if (diagnosis === undefined || patient === undefined) {
-			return;
-		}
-
-		knex('diagnosis')
-			.insert({
-				appointment_id: data.appointmentHistoryID,
-				diagnosis: data.diagnosis,
-				follow_up: data.follow_up,
-				sick_leave: false,
-
-			}).then(() => {
-				console.log("a diagnosis was saved to the database")
-			}).catch((err) => {
-				console.error(err);
-			})
-	}
-
 }
 
 module.exports = History;

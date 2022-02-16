@@ -6,7 +6,6 @@ const knexFile = require("./knexfile.js");
 const knex = require("knex")(knexFile[process.env.ENVIROMENT]);
 const jwt = require("jsonwebtoken");
 const authClass = require("./auth")();
-const axios = require("axios");
 const config = require("./config")
 
 /** Imports from local code */
@@ -42,14 +41,14 @@ const server = new Queue();
 const history = new History();
 
 /** Init routers */
-const authRouter = new AuthRouter(express, axios, jwt, knex, config)
-const objRouter = new ObjRouter(express, jwt, knex, authClass, server);
-const settingsRouter = new SettingsRouter(express, jwt, knex, authClass, server);
-const apiRouter = new ApiRouter(express, jwt, knex, authClass);
-const reviewRouter = new ReviewRouter(express, jwt, knex, authClass);
-const diagnosisRouter = new DiagnosisRouter(express, jwt, knex, authClass);
-const pharmacyRouter = new PharmacyRouter(express, jwt, knex, authClass);
-const bookingRouter = new BookingRouter(express, jwt, knex, authClass);
+const authRouter = new AuthRouter(express, jwt, knex)
+const objRouter = new ObjRouter(express, knex, authClass, server);
+const settingsRouter = new SettingsRouter(express, knex, authClass);
+const apiRouter = new ApiRouter(express, knex, authClass);
+const reviewRouter = new ReviewRouter(express, knex, authClass);
+const diagnosisRouter = new DiagnosisRouter(express, knex, authClass);
+const pharmacyRouter = new PharmacyRouter(express, knex, authClass);
+const bookingRouter = new BookingRouter(express, knex, authClass);
 
 /** Router */
 app.use("/", authRouter.router());
@@ -80,7 +79,7 @@ io
 
         //If the account is a business, add it to its own "room".
         if (socket.decoded.table === "business_users") {
-            console.log(`User ${socket.decoded.id} got initilized as a business`)
+            console.log(`User ${socket.decoded.id} got initialised as a business`)
             socket.join(`Business:${socket.decoded.id}`)
         }
 
@@ -222,20 +221,27 @@ io
         })
 
         socket.on("disconnect", () => {
-            console.log(`DISCONECTED: socket user - ${socket.decoded.id}`);
+            console.log(`DISCONNECTED: socket user - ${socket.decoded.id}`);
         })
     });
 
-    //Testing code inside here
-    setTimeout(() => {
-        let businessID = 1;
-        let doctorID = Object.keys(server[businessID]).filter((key) => key.length === 1);
-        let patients = [1, 2, 3, 5, 8, 11, 12];
-    
-        for (index in doctorID) {
-            for (patientID in patients) {
-                server[businessID][doctorID[index]].addToQueue(new NewPatient(patients[patientID]));
-                console.log("Added patient with ID:" + patients[patientID])
-            }
+/** Add some fake patients with history */
+setTimeout(() => {
+    let businessID = 1;
+    let doctorID = Object.keys(server[businessID]).filter((key) => key.length === 1);
+    let patients = [1, 2, 3, 5, 8, 11, 12];
+
+    for (index in doctorID) {
+        for (patientID in patients) {
+            let patient = new NewPatient(patients[patientID])
+
+            /** Queue actions */
+            server[businessID][doctorID[index]].addToQueue(patient);
+
+            /** History actions */
+            history.saveAppointmentHistoryCheckin(server[businessID], server[businessID][doctorID[index]], patient);
+
+            console.log("Added patient with ID:" + patients[patientID])
         }
-    }, 1000)
+    }
+}, 1000)

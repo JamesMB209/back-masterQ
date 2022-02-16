@@ -1,8 +1,6 @@
 class ObjRouter {
-    constructor(express, jwt, knex, auth, server) {
+    constructor(express, knex, auth, server) {
         this.express = express;
-
-        this.jwt = jwt;
         this.knex = knex;
         this.auth = auth;
         this.server = server;
@@ -47,9 +45,8 @@ class ObjRouter {
 
     /** Only for business front end */
     business(req, res) {
-        console.log("business router ran")
         let business = req.user[0].id;
-        console.log(business)
+        console.log(`The business OBJ was requested for: ${business}`)
         res.send(this.server[business])
     }
 

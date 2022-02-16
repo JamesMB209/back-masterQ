@@ -1,7 +1,6 @@
 class ApiRouter {
-  constructor(express, jwt, knex, auth) {
+  constructor(express, knex, auth) {
     this.express = express;
-    this.jwt = jwt;
     this.knex = knex;
     this.auth = auth;
   }

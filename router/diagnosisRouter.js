@@ -1,7 +1,6 @@
 class DiagnosisRouter {
-    constructor(express, jwt, knex, auth) {
+    constructor(express, knex, auth) {
         this.express = express;
-        this.jwt = jwt;
         this.knex = knex;
         this.auth = auth;
     }
@@ -9,14 +8,14 @@ class DiagnosisRouter {
     router() {
         let router = this.express.Router();
         router.get("/load", this.auth.authenticate(), this.get.bind(this));
-        router.post("/submit", this.post.bind(this));
+        router.post("/submit", this.auth.authenticate(), this.post.bind(this));
         return router;
     }
 
 
     /** Get the diagnosis history of the patient, requires the PatientID as a int or string */
     async get(req, res) {
-        const data = req.query; // get data from get request - do not change
+        const data = req.query;
 
         try {
         let history = await this.knex
@@ -40,7 +39,6 @@ class DiagnosisRouter {
 
     /** Post a new entry to the diagnosis table, requires the PatientOBJ's appointmentHistoryID */
     async post(req, res) {
-        console.log(req.body)
         const data = req.body;
 
         try {
@@ -48,8 +46,8 @@ class DiagnosisRouter {
                 .insert({
                     appointment_id: data.appointmentHistoryID,
                     diagnosis: data.diagnosis,
-                    follow_up: data.followUp, //bool
-                    sick_leave: data.sickLeave, //bool
+                    follow_up: data.followUp,
+                    sick_leave: data.sickLeave, 
                 })
 
                 res.sendStatus(201);
