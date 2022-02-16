@@ -1,5 +1,5 @@
 class SettingsRouter {
-  constructor(express, knex, auth) {
+  constructor(express, jwt, server, knex, auth) {
     this.express = express;
     this.knex = knex;
     this.auth = auth;
@@ -7,6 +7,7 @@ class SettingsRouter {
 
   router() {
     let router = this.express.Router();
+    router.get("/alldoctors", this.auth.authenticate(), this.getDoctors.bind(this));
     router.post("/room",this.auth.authenticate(),  this.changeRoom.bind(this));
     router.post("/status",this.auth.authenticate(),  this.changeStatus.bind(this));
     return router;
@@ -39,6 +40,19 @@ class SettingsRouter {
     } else {
       console.log("doctor status not updated");
     }
+  }
+
+  async getDoctors(req, res) {
+    try {
+      let doctors = await this.knex("doctors")
+          .select("*")
+          .where("business_id",req.user[0].id)
+
+      res.send(doctors)
+    } catch (err) {
+      console.error("something went wrong", err)
+    }
+
   }
 }
 
