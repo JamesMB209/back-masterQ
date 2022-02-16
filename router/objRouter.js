@@ -49,7 +49,7 @@ class ObjRouter {
     business(req, res) {
         console.log("business router ran")
         let business = req.user[0].id;
-
+        console.log(business)
         res.send(this.server[business])
     }
 

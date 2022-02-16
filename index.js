@@ -10,9 +10,6 @@ const axios = require("axios");
 const config = require("./config")
 
 /** Imports from local code */
-const Doctor = require("./service/doctorService");
-const Pharmacy = require("./service/pharmacyService");
-const Business = require("./service/businessService");
 const History = require("./service/historyService");
 const NewPatient = require("./service/newPatientService");
 const Queue = require("./service/queueService");
@@ -23,7 +20,7 @@ const ObjRouter = require("./router/objRouter.js");
 const ReviewRouter = require("./router/reviewRouter");
 const DiagnosisRouter = require("./router/diagnosisRouter");
 const PharmacyRouter = require("./router/pharmacyRouter");
-// const { emit } = require("process");
+const BookingRouter = require("./router/bookingRouter");
 
 /** App configuration */
 const app = express();
@@ -52,6 +49,7 @@ const apiRouter = new ApiRouter(express, jwt, knex, authClass);
 const reviewRouter = new ReviewRouter(express, jwt, knex, authClass);
 const diagnosisRouter = new DiagnosisRouter(express, jwt, knex, authClass);
 const pharmacyRouter = new PharmacyRouter(express, jwt, knex, authClass);
+const bookingRouter = new BookingRouter(express, jwt, knex, authClass);
 
 /** Router */
 app.use("/", authRouter.router());
@@ -61,6 +59,7 @@ app.use('/review', reviewRouter.router());
 app.use("/setting", settingsRouter.router())
 app.use("/diagnosis", diagnosisRouter.router());
 app.use("/pharmacy", pharmacyRouter.router());
+app.use("/booking", bookingRouter.router());
 
 /** Socket Logic - to abstract later - you know or maybe not */
 io
@@ -93,24 +92,10 @@ io
         }
 
         const loadDataBusiness = (data) => {
-            /** Business/Production mode 
-             * 
-             * READ ME! - Swap the comments below depending on which front end you"re using.
-             * also uncomment the data checks in the business buttons(sockets).
-             * 
-            */
-            console.log(data, socket.decoded)
-
             let business = server[socket.decoded.id];
             let doctor = server[socket.decoded.id][data.doctor];
             let patientID = data.patientID;
             return [business, doctor, patientID]
-
-            /** If using the paitent front end buttons for testing mode */
-            // let business = server[data.business];
-            // let doctor = server[data.business][data.doctor];
-            // let patientID = data.patientID;
-            // return [business, doctor, patientID]
         }
 
         const emitUpdate = (businessID, doctorID) => {
@@ -172,10 +157,6 @@ io
          * */
 
         socket.on("NEXT", (data) => {
-            console.log("NEXT")
-            //for testing with the patient app
-            // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
-            //for production with the business app
             if (data.doctor == null) { console.log(`Invalid data`); return }
 
             let [business, doctor, patientID] = loadDataBusiness(data);
@@ -193,7 +174,6 @@ io
 
                 /** move the patient to the pharmacy queue */
                 business.pharmacy.addToQueue(patient)
-                console.log(patient)
 
             } else if (doctor.id === "pharmacy" && patient !== undefined) {
                 /** Logic for a patient departing the pharmacy queue */
@@ -206,40 +186,7 @@ io
             emitUpdate(business.id, doctor.id)
         });
 
-        // socket.on("CALL_TO_PHARMACY", (data) => {
-        //     console.log("CALL_TO_PHARMACY")
-        //     if (data.doctor == null) { console.log(`Invalid data`); return }
-
-        //     let [business, doctor, patientID] = loadDataBusiness(data);
-
-        //     /** Queue actions */
-        //     doctor.move(patientID, 0)
-
-        //     /** Update actions */
-        //     emitUpdate(business.id, doctor.id)
-        // });
-
-        // socket.on("MARK_COMPLETED", (data) => {
-        //     console.log("MARK_COMPLETED")
-        //     if (data.doctor == null) { console.log(`Invalid data`); return }
-
-        //     let [business, doctor, patientID] = loadDataBusiness(data);
-
-        //     /** Queue actions */
-        //     let patient = doctor.remove(patientID);
-
-        //     /** History actions */
-        //     history.saveAppointmentHistoryPharmacy(business, doctor, patient);
-
-        //     /** Update actions */
-        //     emitUpdate(business.id, doctor.id)
-        // })
-
         socket.on("MOVE_UP", (data) => {
-            console.log("MOVE_UP")
-            //for testing with the patient app
-            // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
-            //for production with the business app
             if (data.doctor == null) { console.log(`Invalid data`); return }
 
             let [business, doctor, patientID] = loadDataBusiness(data);
@@ -252,10 +199,6 @@ io
         });
 
         socket.on("DELETE", (data) => {
-            console.log("DELETE")
-            //for testing with the patient app
-            // if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
-            //for production with the business app
             if (data.doctor == null) { console.log(`Invalid data`); return }
 
             let [business, doctor, patientID] = loadDataBusiness(data);
@@ -282,63 +225,3 @@ io
             console.log(`DISCONECTED: socket user - ${socket.decoded.id}`);
         })
     });
-
-
-/** status info */
-setTimeout(() => {
-//   // //Testing code inside here
-  let businessID = 1;
-  let doctorID = 1;
-  let patientID = 1;
-  // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-  patientID = 2;
-  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-  patientID = 3;
-  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-
-//   //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
-}, 1000);
-// /** status info */
-setTimeout(() => {
-  // //Testing code inside here
-  let businessID = 1;
-  let doctorID = 2;
-  let patientID = 4;
-  // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-  patientID = 5;
-  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-  patientID = 6;
-  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-
-  //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
-}, 1000);
-// /** status info */
-setTimeout(() => {
-  // //Testing code inside here
-  let businessID = 1;
-  let doctorID = 3;
-  let patientID = 7;
-  // server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-  patientID = 8;
-  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-  patientID = 9;
-  server[businessID][doctorID].addToQueue(new NewPatient(patientID));
-
-  //    console.log(Object.keys(server).forEach(key => console.log(Object.keys(server[key]))))
-}, 1000);
-//     // //Testing code inside here
-    setTimeout(() => {
-    let businessID = 1;
-    let doctorID = [2, 3];
-    let patients = [1, 2, 3, 5, 8, 11, 12];
-
-    for (index in doctorID) {
-        for (patientID in patients) {
-            server[businessID][doctorID[index]].addToQueue(new NewPatient(patients[patientID]));
-            console.log("Added patient with ID:" + patients[patientID])
-        }
-    }
-}, 1000)

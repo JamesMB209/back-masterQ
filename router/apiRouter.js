@@ -9,7 +9,7 @@ class ApiRouter {
   router() {
     let router = this.express.Router();
     router.get("/config", this.auth.authenticate(), this.config.bind(this));
-    router.get("/patients", this.auth.authenticate(), this.patientConfig.bind(this)); // auth was missing here. we really need it on this one if its broken something.
+    router.get("/patients", this.auth.authenticate(), this.patientConfig.bind(this));
     return router;
   }
   
@@ -31,7 +31,6 @@ class ApiRouter {
 
   async patientConfig(req, res) {
     try {
-      // let response = await this.knex("appointment_history").select("*").where("business_id", req.user[0].id)
       let response = await this.knex
         .select("f_name", "l_name", "hkid", "email", "gender", "dob", "phone", "drug_allergy")
         .from("patients")

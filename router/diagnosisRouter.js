@@ -17,7 +17,6 @@ class DiagnosisRouter {
     /** Get the diagnosis history of the patient, requires the PatientID as a int or string */
     async get(req, res) {
         const data = req.query; // get data from get request - do not change
-        console.log(req.query.patientID)
 
         try {
         let history = await this.knex

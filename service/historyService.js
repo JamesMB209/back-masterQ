@@ -7,9 +7,6 @@ class History {
 	 * Adds a new booking to the history, requires the business object, doctor object, and patient object.
 	 */
 	async saveAppointmentHistoryCheckin(business, doctor, patient) {
-
-		console.log("tried saveAppointmentHistoryCheckin")
-
 		try {
 			let [result] = await knex('appointment_history')
 				.returning('id')
@@ -38,8 +35,6 @@ class History {
 			return;
 		}
 
-		console.log("tried saveAppointmentHistoryDoctor")
-
 		try {
 			await knex('appointment_history')
 				.where("id", "=", patient.appointmentHistoryID)
@@ -61,8 +56,6 @@ class History {
 			console.error("There was no patient sent the the pharmacy history");
 			return;
 		}
-
-		console.log("tried saveAppointmentHistoryPharmacy")
 
 		try {
 			await knex('appointment_history')
