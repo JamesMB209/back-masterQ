@@ -1,5 +1,5 @@
 class SettingsRouter {
-  constructor(express, jwt, server, knex, auth) {
+  constructor(express, knex, auth) {
     this.express = express;
     this.knex = knex;
     this.auth = auth;

@@ -43,7 +43,7 @@ const history = new History();
 /** Init routers */
 const authRouter = new AuthRouter(express, jwt, knex, config)
 const objRouter = new ObjRouter(express, knex, authClass, server);
-const settingsRouter = new SettingsRouter(express, jwt, server, knex, authClass);
+const settingsRouter = new SettingsRouter(express, knex, authClass);
 const apiRouter = new ApiRouter(express, knex, authClass);
 const reviewRouter = new ReviewRouter(express, knex, authClass);
 const diagnosisRouter = new DiagnosisRouter(express, knex, authClass);
