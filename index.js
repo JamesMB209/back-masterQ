@@ -133,6 +133,7 @@ io
 
         socket.on("CHECKIN", (data) => {
             if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            if (data.business == "" || data.doctor == "") { console.log(`Invalid data`); return }
             let [business, doctor, patientID] = loadDataPatient(data);
 
             let patient = new NewPatient(patientID);
@@ -224,6 +225,10 @@ io
             console.log(`DISCONNECTED: socket user - ${socket.decoded.id}`);
         })
     });
+
+app.get("/", (req, res) => {
+    res.send("<img src='https://i.imgur.com:/5SGG1ng.gif/'>")
+})
 
 /** Add some fake patients with history */
 setTimeout(() => {
