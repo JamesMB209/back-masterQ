@@ -6,7 +6,7 @@ class AuthRouter {
 
     this.jwt = jwt
     this.knex = knex
-    // this.config = config
+    this.config = config
     // this.server = server
   }
   router() {
