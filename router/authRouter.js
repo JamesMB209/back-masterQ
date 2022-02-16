@@ -61,7 +61,7 @@ class AuthRouter {
 
   async postSignup(req, res) {
     // we have no logic to handle if the email is taken.
-    console.log('Sign up')
+    console.log('A new user signed up details:')
     console.log(req.body)
     if (req.body.email && req.body.password && req.body.type) {
       let table = req.body.type;
@@ -81,20 +81,22 @@ class AuthRouter {
       }
 
       try {
-      let userId = await this.knex('patients')
-        .insert(patient)
-        .returning('id')
+        let userId = await this.knex('patients')
+          .insert(patient)
+          .returning('id')
+
+        let payload = {
+          id: userId[0].id,
+          table: table
+        }
+
+        let token = this.jwt.sign(payload, this.config.jwtSecret)
+        res.json({ token })
+
       } catch (err) {
         console.error("Account already exists")
+        res.sendStatus(409)
       }
-
-      let payload = {
-        id: userId[0].id,
-        table: table
-      }
-      let token = this.jwt.sign(payload, this.config.jwtSecret)
-      console.log(token)
-      res.json({ token })
     } else {
       res.sendStatus(402)
     }
@@ -108,7 +110,7 @@ class AuthRouter {
     if (req.body.secret && req.body.password) {
       let hashedPassword = await bcrypt.hash(password, 10)
       console.log(hashedPassword)
-      let bUser = await this.knex(table).where({secret_token: secret}).update({password: hashedPassword})
+      let bUser = await this.knex(table).where({ secret_token: secret }).update({ password: hashedPassword })
       console.log(bUser)
     }
     else {
