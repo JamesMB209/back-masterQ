@@ -225,3 +225,17 @@ io
             console.log(`DISCONECTED: socket user - ${socket.decoded.id}`);
         })
     });
+
+    //Testing code inside here
+    setTimeout(() => {
+        let businessID = 1;
+        let doctorID = Object.keys(server[businessID]).filter((key) => key.length === 1);
+        let patients = [1, 2, 3, 5, 8, 11, 12];
+    
+        for (index in doctorID) {
+            for (patientID in patients) {
+                server[businessID][doctorID[index]].addToQueue(new NewPatient(patients[patientID]));
+                console.log("Added patient with ID:" + patients[patientID])
+            }
+        }
+    }, 1000)
