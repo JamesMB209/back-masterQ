@@ -16,7 +16,7 @@ class PharmacyRouter {
     async get(req, res) {
         try {
             let inventory = await this.knex("inventory")
-                .select("sku", "drug", "dosage", "price", "stock")
+                .select("sku", "drug", "dosage", "price", "stock", "cost")
                 .where("business_id",  req.user[0].id)
 
             res.send(JSON.stringify(inventory));
