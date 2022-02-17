@@ -149,6 +149,17 @@ io
             socket.emit("UPDATE_PATIENT");
         })
 
+        socket.on("CHECKOUT", (data) => {
+            console.log("this happened")
+            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            if (data.business == "" || data.doctor == "") { console.log(`Invalid data`); return }
+            let [business, doctor, patientID] = loadDataPatient(data);
+
+            socket.leave(`${business.id}:${doctor.id}`);
+            socket.leave(`${business.id}:pharmacy`)
+
+            console.log("IM LEAVING THE ROOM")
+        })
 
         /** 
          * 
@@ -157,6 +168,7 @@ io
          * */
 
         socket.on("NEXT", (data) => {
+            console.log("NexT", data)
             if (data.doctor == null) { console.log(`Invalid data`); return }
 
             let [business, doctor, patientID] = loadDataBusiness(data);
@@ -171,6 +183,8 @@ io
                 history.saveAppointmentHistoryDoctor(business, doctor, patient);
 
                 if (data.prescribedDrugs) { patient.prescribedDrugs = data.prescribedDrugs }
+                /*Send Sick Leave and Follow-Up*/
+                if (data.documentation) {patient.documents = data.documentation}
 
                 /** move the patient to the pharmacy queue */
                 business.pharmacy.addToQueue(patient)
@@ -234,7 +248,7 @@ app.get("/", (req, res) => {
 setTimeout(() => {
     let businessID = 1;
     let doctorID = Object.keys(server[businessID]).filter((key) => key.length === 1);
-    let patients = [1, 2, 3, 5, 8, 11, 12];
+    let patients = [1, 3, 5, 8, 11, 12];
 
     for (index in doctorID) {
         for (patientID in patients) {
