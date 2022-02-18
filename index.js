@@ -108,32 +108,44 @@ io
 
         /** 
          * 
-         * Patient front end buttons 
+         * Patient room managers 
          * 
          * */
 
         socket.on("DOCTOR_ROOM", (data) => {
-            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            if (data.business == null || data.doctor == null || data.business == "" || data.doctor == "") { console.log(`Invalid data`); return }
             let [business, doctor, patientID] = loadDataPatient(data);
 
             /** Update actions */
             socket.join(`${business.id}:${doctor.id}`);
-            console.log(`switched rooms ${business.id}:${doctor.id}`)
         })
 
         socket.on("PHARMACY_ROOM", (data) => {
-            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
+            if (data.business == null || data.doctor == null || data.business == "" || data.doctor == "") { console.log(`Invalid data`); return }
             let [business, doctor, patientID] = loadDataPatient(data);
 
             /** Update actions */
             socket.leave(`${business.id}:${doctor.id}`);
             socket.join(`${business.id}:pharmacy`)
-            console.log(`switched rooms ${business.id}:pharmacy`)
         })
 
+        socket.on("CHECKOUT", (data) => {
+            if (data.business == null || data.doctor == null || data.business == "" || data.doctor == "") { console.log(`Invalid data`); return }
+            let [business, doctor, patientID] = loadDataPatient(data);
+
+            /** Update actions */
+            socket.leave(`${business.id}:${doctor.id}`);
+            socket.leave(`${business.id}:pharmacy`)
+        })
+
+         /** 
+         * 
+         * Patient front end buttons 
+         * 
+         * */
+
         socket.on("CHECKIN", (data) => {
-            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
-            if (data.business == "" || data.doctor == "") { console.log(`Invalid data`); return }
+            if (data.business == null || data.doctor == null || data.business == "" || data.doctor == "") { console.log(`Invalid data`); return }
             let [business, doctor, patientID] = loadDataPatient(data);
 
             let patient = new NewPatient(patientID);
@@ -149,18 +161,6 @@ io
             socket.emit("UPDATE_PATIENT");
         })
 
-        socket.on("CHECKOUT", (data) => {
-            console.log("this happened")
-            if (data.business == null || data.doctor == null) { console.log(`Invalid data`); return }
-            if (data.business == "" || data.doctor == "") { console.log(`Invalid data`); return }
-            let [business, doctor, patientID] = loadDataPatient(data);
-
-            socket.leave(`${business.id}:${doctor.id}`);
-            socket.leave(`${business.id}:pharmacy`)
-
-            console.log("IM LEAVING THE ROOM")
-        })
-
         /** 
          * 
          * Business front end buttons 
@@ -168,7 +168,6 @@ io
          * */
 
         socket.on("NEXT", (data) => {
-            console.log("NexT", data)
             if (data.doctor == null) { console.log(`Invalid data`); return }
 
             let [business, doctor, patientID] = loadDataBusiness(data);
@@ -182,8 +181,8 @@ io
                 /** History actions */
                 history.saveAppointmentHistoryDoctor(business, doctor, patient);
 
+                /** Append patient data*/
                 if (data.prescribedDrugs) { patient.prescribedDrugs = data.prescribedDrugs }
-                /*Send Sick Leave and Follow-Up*/
                 if (data.documentation) {patient.documents = data.documentation}
 
                 /** move the patient to the pharmacy queue */
