@@ -227,7 +227,7 @@ io
     });
 
 app.get("/", (req, res) => {
-    res.send("<img src='https://i.imgur.com:/5SGG1ng.gif/'>")
+    res.send("Online")
 })
 
 /** Add some fake patients with history */
